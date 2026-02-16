@@ -28,7 +28,7 @@ const partners = [
   { name: "Sitemark", image: "/images/logo-sitemark.png" },
   { name: "Snowflake", image: "/images/logo-snowflake.png" },
   { name: "Cactus", image: "/images/logo-cactus.png" },
-  { name: "Greenish", image: "/images/logo-cactus.png" },
+  { name: "Greenin", image: "/images/logo-greenin.png" },
 ]
 
 export default function TeamSection() {

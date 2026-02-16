@@ -1,9 +1,11 @@
+import Image from "next/image"
+
 const partners = [
-  "Vertige",
-  "Element",
-  "Snowflake",
-  "Clarkus",
-  "Greenin",
+  { name: "Vertigo", image: "/images/logo-vertigo.png" },
+  { name: "Sitemark", image: "/images/logo-sitemark.png" },
+  { name: "Snowflake", image: "/images/logo-snowflake.png" },
+  { name: "Cactus", image: "/images/logo-cactus.png" },
+  { name: "Greenin", image: "/images/logo-greenin.png" },
 ]
 
 export default function PartnersSection() {
@@ -15,12 +17,18 @@ export default function PartnersSection() {
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-10 lg:gap-16">
           {partners.map((partner) => (
-            <span
-              key={partner}
-              className="text-xl font-bold tracking-tight text-foreground/30 transition-colors hover:text-foreground/60"
+            <div
+              key={partner.name}
+              className="flex items-center justify-center rounded-2xl border border-border bg-background px-6 py-4 transition-shadow hover:shadow-md"
             >
-              {partner}
-            </span>
+              <Image
+                src={partner.image}
+                alt={partner.name}
+                width={140}
+                height={40}
+                className="h-8 w-auto object-contain"
+              />
+            </div>
           ))}
         </div>
       </div>
