@@ -1,5 +1,6 @@
 import Link from "next/link"
-import { Leaf, MapPin, Phone, Mail, Facebook, Instagram, Twitter, Linkedin } from "lucide-react"
+import Image from "next/image"
+import { Leaf, MapPin, Phone, Mail } from "lucide-react"
 
 const companyLinks = [
   { label: "About Us", href: "/about" },
@@ -17,10 +18,10 @@ const serviceLinks = [
 ]
 
 const socialLinks = [
-  { icon: Facebook, href: "#", label: "Facebook" },
-  { icon: Instagram, href: "#", label: "Instagram" },
-  { icon: Twitter, href: "#", label: "Twitter" },
-  { icon: Linkedin, href: "#", label: "LinkedIn" },
+  { image: "/images/social-icon-1.png", href: "#", label: "Facebook" },
+  { image: "/images/social-icon-2.png", href: "#", label: "Instagram" },
+  { image: "/images/social-icon-3.png", href: "#", label: "Twitter" },
+  { image: "/images/social-icon-4.png", href: "#", label: "LinkedIn" },
 ]
 
 export default function Footer() {
@@ -42,19 +43,22 @@ export default function Footer() {
               solutions.
             </p>
             <div className="mt-6 flex items-center gap-3">
-              {socialLinks.map((social) => {
-                const Icon = social.icon
-                return (
+              {socialLinks.map((social) => (
                   <a
                     key={social.label}
                     href={social.href}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/10 text-primary-foreground/60 transition-colors hover:bg-secondary hover:text-secondary-foreground"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/10 transition-colors hover:bg-secondary"
                     aria-label={social.label}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Image
+                      src={social.image}
+                      alt={social.label}
+                      width={16}
+                      height={16}
+                      className="h-4 w-4 object-contain"
+                    />
                   </a>
-                )
-              })}
+              ))}
             </div>
           </div>
 

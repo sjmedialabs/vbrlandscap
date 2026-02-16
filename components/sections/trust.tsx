@@ -91,16 +91,27 @@ export default function TrustSection() {
             </div>
           </div>
 
-          {/* Right Side - Masked Image */}
+          {/* Right Side - Masked Images */}
           <div className="w-full lg:w-[48%] flex justify-center lg:justify-end">
-            <div className="relative">
-              {/* The main masked farmer image */}
-              <div className="relative w-[380px] h-[500px] md:w-[440px] md:h-[580px]">
+            <div className="relative flex items-center gap-4">
+              {/* First mask image - woman with leaves */}
+              <div className="relative w-[200px] h-[280px] md:w-[220px] md:h-[300px]">
                 <Image
                   src="/images/why-choose-mask.png"
-                  alt="Farmer harvesting fresh vegetables in the field"
+                  alt="Woman holding plant leaves in a green field"
                   fill
-                  sizes="(max-width: 1024px) 100vw, 440px"
+                  sizes="(max-width: 1024px) 50vw, 220px"
+                  className="object-contain"
+                />
+              </div>
+
+              {/* Second mask image - hands with roots */}
+              <div className="relative w-[200px] h-[280px] md:w-[220px] md:h-[300px]">
+                <Image
+                  src="/images/why-choose-mask-2.png"
+                  alt="Gardener holding freshly harvested roots"
+                  fill
+                  sizes="(max-width: 1024px) 50vw, 220px"
                   className="object-contain"
                 />
               </div>
