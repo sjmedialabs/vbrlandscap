@@ -63,7 +63,8 @@ export default function HeroSection() {
               alt="Team members"
               width={120}
               height={40}
-              className="h-10 w-auto"
+              style={{ width: "auto", height: "auto" }}
+              className="h-10"
             />
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-bold text-white">4.8</span>
