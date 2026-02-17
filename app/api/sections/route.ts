@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server"
+import { db } from "@/lib/firebase"
+import { collection, getDocs } from "firebase/firestore"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
-    const { adminDb } = await import("@/lib/firebase-admin")
-    const snapshot = await adminDb.collection("sections").get()
+    const snapshot = await getDocs(collection(db, "sections"))
     const sections: Record<string, unknown> = {}
 
-    snapshot.forEach((doc) => {
-      sections[doc.id] = { id: doc.id, ...doc.data() }
+    snapshot.forEach((docSnap) => {
+      sections[docSnap.id] = { id: docSnap.id, ...docSnap.data() }
     })
 
     return NextResponse.json(sections)

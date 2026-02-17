@@ -9,16 +9,16 @@ function getAdminApp() {
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL
   const rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY
 
+  console.log("[v0] Firebase Admin env check:", JSON.stringify({
+    projectId: projectId ? projectId.substring(0, 8) + "..." : "MISSING",
+    clientEmail: clientEmail ? clientEmail.substring(0, 10) + "..." : "MISSING",
+    privateKey: rawKey ? `present (${rawKey.length} chars)` : "MISSING",
+  }))
+
   if (!projectId || !clientEmail || !rawKey) {
-    console.error(
-      "[v0] Missing Firebase Admin env vars. Got:",
-      JSON.stringify({
-        projectId: !!projectId,
-        clientEmail: !!clientEmail,
-        privateKey: !!rawKey,
-      })
+    throw new Error(
+      `Missing Firebase Admin env vars: ${!projectId ? "NEXT_PUBLIC_FIREBASE_PROJECT_ID " : ""}${!clientEmail ? "FIREBASE_ADMIN_CLIENT_EMAIL " : ""}${!rawKey ? "FIREBASE_ADMIN_PRIVATE_KEY" : ""}`
     )
-    throw new Error("Missing Firebase Admin environment variables")
   }
 
   const privateKey = rawKey.replace(/\\n/g, "\n")
