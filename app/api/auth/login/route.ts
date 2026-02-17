@@ -12,33 +12,48 @@ export async function POST(request: Request) {
 
     // Use Firebase Auth REST API to sign in (server-side, no client SDK needed)
     const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY
-    const res = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          returnSecureToken: true,
-        }),
-      }
-    )
+    if (!apiKey) {
+      console.error("[v0] NEXT_PUBLIC_FIREBASE_API_KEY is not set")
+      return NextResponse.json({ error: "Server misconfiguration: Firebase API key missing" }, { status: 500 })
+    }
+
+    const signInUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`
+    console.log("[v0] Attempting Firebase REST sign-in for:", email)
+
+    const res = await fetch(signInUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        password,
+        returnSecureToken: true,
+      }),
+    })
 
     const data = await res.json()
+    console.log("[v0] Firebase REST response status:", res.status, "error:", data?.error?.message)
 
     if (!res.ok) {
+      const fbError = data?.error?.message || "Authentication failed"
       const errorMessage =
-        data?.error?.message === "EMAIL_NOT_FOUND" || data?.error?.message === "INVALID_PASSWORD" || data?.error?.message === "INVALID_LOGIN_CREDENTIALS"
+        fbError === "EMAIL_NOT_FOUND" || fbError === "INVALID_PASSWORD" || fbError === "INVALID_LOGIN_CREDENTIALS"
           ? "Invalid email or password"
-          : data?.error?.message || "Authentication failed"
+          : fbError
       return NextResponse.json({ error: errorMessage }, { status: 401 })
     }
 
     // Create session cookie from the ID token
     const idToken = data.idToken
     const expiresIn = 60 * 60 * 24 * 5 * 1000 // 5 days
-    const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn })
+
+    let sessionCookie: string
+    try {
+      sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn })
+    } catch (cookieErr: unknown) {
+      const msg = cookieErr instanceof Error ? cookieErr.message : "Unknown error"
+      console.error("[v0] Failed to create session cookie:", msg)
+      return NextResponse.json({ error: "Session creation failed: " + msg }, { status: 500 })
+    }
 
     const cookieStore = await cookies()
     cookieStore.set("auth-token", sessionCookie, {
