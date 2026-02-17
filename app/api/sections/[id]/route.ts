@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
+import { db } from "@/lib/firebase"
+import { doc, getDoc, setDoc } from "firebase/firestore"
 
 async function verifyAuth() {
   const cookieStore = await cookies()
@@ -20,12 +22,11 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const { adminDb } = await import("@/lib/firebase-admin")
-    const doc = await adminDb.collection("sections").doc(id).get()
-    if (!doc.exists) {
+    const docSnap = await getDoc(doc(db, "sections", id))
+    if (!docSnap.exists()) {
       return NextResponse.json({ error: "Section not found" }, { status: 404 })
     }
-    return NextResponse.json({ id: doc.id, ...doc.data() })
+    return NextResponse.json({ id: docSnap.id, ...docSnap.data() })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error"
     return NextResponse.json({ error: message }, { status: 500 })
@@ -46,9 +47,8 @@ export async function PUT(
     const body = await request.json()
     const { id: _id, ...data } = body
 
-    const { adminDb } = await import("@/lib/firebase-admin")
-    await adminDb.collection("sections").doc(id).set(data, { merge: true })
-    const updated = await adminDb.collection("sections").doc(id).get()
+    await setDoc(doc(db, "sections", id), data, { merge: true })
+    const updated = await getDoc(doc(db, "sections", id))
     return NextResponse.json({ id: updated.id, ...updated.data() })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error"
