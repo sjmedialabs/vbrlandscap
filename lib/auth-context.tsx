@@ -1,16 +1,14 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import {
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  type User,
-} from "firebase/auth"
-import { auth } from "@/lib/firebase"
+
+interface AuthUser {
+  email: string
+  uid: string
+}
 
 interface AuthContextType {
-  user: User | null
+  user: AuthUser | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
@@ -19,40 +17,39 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const idToken = await firebaseUser.getIdToken()
-        await fetch("/api/auth/session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idToken }),
-        })
-        setUser(firebaseUser)
-      } else {
-        setUser(null)
-      }
-      setLoading(false)
-    })
-
-    return () => unsubscribe()
+    // Check existing session on mount
+    fetch("/api/auth/verify")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated) {
+          setUser({ email: data.email, uid: data.uid })
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const credential = await signInWithEmailAndPassword(auth, email, password)
-    const idToken = await credential.user.getIdToken()
-    await fetch("/api/auth/session", {
+    const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idToken }),
+      body: JSON.stringify({ email, password }),
     })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      throw new Error(data.error || "Login failed")
+    }
+
+    setUser(data.user)
   }
 
   const signOut = async () => {
-    await firebaseSignOut(auth)
     await fetch("/api/auth/session", { method: "DELETE" })
     setUser(null)
   }
