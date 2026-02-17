@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server"
-import { adminDb } from "@/lib/firebase-admin"
-import { adminAuth } from "@/lib/firebase-admin"
 import { cookies } from "next/headers"
 
 async function verifyAuth() {
   const cookieStore = await cookies()
-  const token = cookieStore.get("auth-token")?.value
-  if (!token) return null
+  const raw = cookieStore.get("auth-session")?.value
+  if (!raw) return null
   try {
-    const decoded = await adminAuth.verifySessionCookie(token, true)
-    return decoded
+    const session = JSON.parse(raw)
+    if (!session.uid || !session.email) return null
+    return { uid: session.uid, email: session.email }
   } catch {
     return null
   }
@@ -21,6 +20,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+    const { adminDb } = await import("@/lib/firebase-admin")
     const doc = await adminDb.collection("sections").doc(id).get()
     if (!doc.exists) {
       return NextResponse.json({ error: "Section not found" }, { status: 404 })
@@ -46,6 +46,7 @@ export async function PUT(
     const body = await request.json()
     const { id: _id, ...data } = body
 
+    const { adminDb } = await import("@/lib/firebase-admin")
     await adminDb.collection("sections").doc(id).set(data, { merge: true })
     const updated = await adminDb.collection("sections").doc(id).get()
     return NextResponse.json({ id: updated.id, ...updated.data() })

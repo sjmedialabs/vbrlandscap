@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
-import { adminDb } from "@/lib/firebase-admin"
 
 export async function POST() {
   try {
+    const { adminDb } = await import("@/lib/firebase-admin")
     // 1. HERO SECTION
     await adminDb.collection("sections").doc("hero").set({
       heading: "Transforming Outdoor Spaces Into Natural Beauty.",

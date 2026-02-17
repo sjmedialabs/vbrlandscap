@@ -1,67 +1,112 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
-import { Loader2, Image as ImageIcon, Info } from "lucide-react"
+import {
+  Loader2,
+  Image as ImageIcon,
+  Upload,
+  Copy,
+  Check,
+  Trash2,
+  X,
+  Search,
+} from "lucide-react"
 
-const allImages = [
-  { path: "/images/hero-bg.jpg", label: "Hero Background" },
-  { path: "/images/rectangle-11.png", label: "Hero Stat Image" },
-  { path: "/images/avatars.png", label: "Hero Avatars" },
-  { path: "/images/about-person.jpg", label: "About Person" },
-  { path: "/images/leaf-decoration.png", label: "Leaf Decoration" },
-  { path: "/images/garden-tools-decor.jpg", label: "Garden Tools" },
-  { path: "/images/container.png", label: "Container" },
-  { path: "/images/icon-landscape.png", label: "Icon: Landscape" },
-  { path: "/images/icon-eye.png", label: "Icon: Eye" },
-  { path: "/images/icon-hand-plant.png", label: "Icon: Hand Plant" },
-  { path: "/images/icon-aloe.png", label: "Icon: Aloe" },
-  { path: "/images/icon-thumbs.png", label: "Icon: Thumbs" },
-  { path: "/images/service-1.png", label: "Service: Design" },
-  { path: "/images/service-2.png", label: "Service: Tree Care" },
-  { path: "/images/service-3.png", label: "Service: Drainage" },
-  { path: "/images/service-4.png", label: "Service: Cleanup" },
-  { path: "/images/leaf-green.png", label: "Leaf Green" },
-  { path: "/images/why-choose-mask.png", label: "Trust Mask 1" },
-  { path: "/images/why-choose-mask-2.png", label: "Trust Mask 2" },
-  { path: "/images/trowel-seedling.png", label: "Trowel Seedling" },
-  { path: "/images/stats-bg.png", label: "Stats Background" },
-  { path: "/images/farmer-field.png", label: "Farmer Field" },
-  { path: "/images/leaf-gray.png", label: "Leaf Gray" },
-  { path: "/images/team-1.jpg", label: "Team 1" },
-  { path: "/images/team-2.jpg", label: "Team 2" },
-  { path: "/images/team-3.jpg", label: "Team 3" },
-  { path: "/images/team-4.jpg", label: "Team 4" },
-  { path: "/images/leaf-lime.png", label: "Leaf Lime" },
-  { path: "/images/logo-vertigo.png", label: "Partner: Vertigo" },
-  { path: "/images/logo-sitemark.png", label: "Partner: Sitemark" },
-  { path: "/images/logo-snowflake.png", label: "Partner: Snowflake" },
-  { path: "/images/logo-cactus.png", label: "Partner: Cactus" },
-  { path: "/images/logo-greenin.png", label: "Partner: Greenin" },
-  { path: "/images/cta-garden-bg.png", label: "CTA Background" },
-  { path: "/images/turf-installer.png", label: "Turf Installer" },
-  { path: "/images/testimonial-bg.jpg", label: "Testimonial BG" },
-  { path: "/images/leaf-decoration.jpg", label: "FAQ Leaf" },
-  { path: "/images/blog-1.jpg", label: "Blog 1" },
-  { path: "/images/blog-2.jpg", label: "Blog 2" },
-  { path: "/images/blog-3.jpg", label: "Blog 3" },
-  { path: "/images/social-icon-1.png", label: "Social: Facebook" },
-  { path: "/images/social-icon-2.png", label: "Social: Instagram" },
-  { path: "/images/social-icon-3.png", label: "Social: Twitter" },
-  { path: "/images/social-icon-4.png", label: "Social: LinkedIn" },
-]
+interface BlobFile {
+  url: string
+  pathname: string
+  size: number
+  uploadedAt: string
+  filename: string
+}
 
 export default function ImagesPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const [files, setFiles] = useState<BlobFile[]>([])
+  const [loading, setLoading] = useState(true)
+  const [uploading, setUploading] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
+  const [copiedUrl, setCopiedUrl] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/admin/login")
     }
   }, [authLoading, user, router])
+
+  useEffect(() => {
+    if (user) fetchFiles()
+  }, [user])
+
+  const fetchFiles = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch("/api/upload")
+      if (res.ok) {
+        const data = await res.json()
+        setFiles(data.files || [])
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpload = async (fileList: FileList) => {
+    setUploading(true)
+    try {
+      for (const file of Array.from(fileList)) {
+        if (!file.type.startsWith("image/")) continue
+        const formData = new FormData()
+        formData.append("file", file)
+        await fetch("/api/upload", { method: "POST", body: formData })
+      }
+      await fetchFiles()
+    } catch {
+      // silently fail
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleDelete = async (url: string) => {
+    try {
+      await fetch("/api/upload", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      })
+      setFiles((prev) => prev.filter((f) => f.url !== url))
+    } catch {
+      // silently fail
+    }
+  }
+
+  const handleCopy = (url: string) => {
+    navigator.clipboard.writeText(url)
+    setCopiedUrl(url)
+    setTimeout(() => setCopiedUrl(""), 2000)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    if (e.dataTransfer.files.length) handleUpload(e.dataTransfer.files)
+  }
+
+  const filteredFiles = files.filter(
+    (f) =>
+      !searchQuery ||
+      f.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      f.pathname.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   if (authLoading || !user) {
     return (
@@ -78,36 +123,141 @@ export default function ImagesPage() {
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-[#1a1a1a]">Images Library</h1>
-            <p className="text-sm text-[#666]">All images used across the website</p>
+            <p className="text-sm text-[#666]">
+              Upload and manage images for the website. Click copy to use a URL in section editors.
+            </p>
           </div>
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2d6a2e]/10">
             <ImageIcon className="h-5 w-5 text-[#2d6a2e]" />
           </div>
         </div>
 
-        <div className="mb-4 flex items-start gap-2 rounded-xl border border-blue-200 bg-blue-50 p-4">
-          <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-500" />
-          <p className="text-sm text-blue-700">
-            To update an image, change the image path in the relevant section editor. Images are served from the /public/images/ folder. Upload new images to that folder and reference them by path.
-          </p>
+        {/* Upload dropzone */}
+        <div
+          onDragOver={(e) => {
+            e.preventDefault()
+            setDragOver(true)
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+          onClick={() => inputRef.current?.click()}
+          className={cn(
+            "mb-6 flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-6 py-10 transition-colors",
+            dragOver
+              ? "border-[#2d6a2e] bg-[#2d6a2e]/5"
+              : "border-[#d4d4d4] bg-white hover:border-[#2d6a2e]/50 hover:bg-[#f0f4ec]",
+            uploading && "pointer-events-none opacity-60"
+          )}
+        >
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => {
+              if (e.target.files?.length) handleUpload(e.target.files)
+              if (inputRef.current) inputRef.current.value = ""
+            }}
+            className="hidden"
+          />
+          {uploading ? (
+            <>
+              <Loader2 className="h-8 w-8 animate-spin text-[#2d6a2e]" />
+              <span className="text-sm text-[#666]">Uploading...</span>
+            </>
+          ) : (
+            <>
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#2d6a2e]/10">
+                <Upload className="h-7 w-7 text-[#2d6a2e]" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-[#333]">
+                  Drag and drop images here, or click to browse
+                </p>
+                <p className="mt-1 text-xs text-[#888]">
+                  Supports JPG, PNG, SVG, WebP. Multiple files allowed. Max 10MB each.
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {allImages.map((img) => (
-            <div key={img.path} className="rounded-xl border border-[#e5e5e5] bg-white p-3">
-              <div className="mb-2 flex h-24 items-center justify-center overflow-hidden rounded-lg bg-[#f5f5f5]">
-                <img
-                  src={img.path}
-                  alt={img.label}
-                  className="max-h-full max-w-full object-contain"
-                />
-              </div>
-              <p className="text-xs font-medium text-[#333] truncate">{img.label}</p>
-              <p className="text-xs text-[#888] truncate">{img.path}</p>
-            </div>
-          ))}
+        {/* Search */}
+        <div className="mb-4 flex items-center gap-2 rounded-xl border border-[#e5e5e5] bg-white px-3 py-2.5">
+          <Search className="h-4 w-4 text-[#999]" />
+          <input
+            type="text"
+            placeholder="Search images..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 bg-transparent text-sm text-[#1a1a1a] outline-none placeholder:text-[#aaa]"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")}>
+              <X className="h-4 w-4 text-[#999]" />
+            </button>
+          )}
         </div>
+
+        {/* Images grid */}
+        {loading ? (
+          <div className="flex h-40 items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-[#2d6a2e]" />
+          </div>
+        ) : filteredFiles.length === 0 ? (
+          <div className="flex h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#d4d4d4] bg-white">
+            <ImageIcon className="h-8 w-8 text-[#ccc]" />
+            <p className="text-sm text-[#888]">
+              {searchQuery ? "No images match your search" : "No images uploaded yet"}
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {filteredFiles.map((file) => (
+              <div
+                key={file.url}
+                className="group rounded-xl border border-[#e5e5e5] bg-white p-3 transition-shadow hover:shadow-md"
+              >
+                <div className="relative mb-2 flex h-32 items-center justify-center overflow-hidden rounded-lg bg-[#f5f5f5]">
+                  <img
+                    src={file.url}
+                    alt={file.filename}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                    <button
+                      onClick={() => handleCopy(file.url)}
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#333] hover:bg-[#f0f0f0]"
+                      title="Copy URL"
+                    >
+                      {copiedUrl === file.url ? (
+                        <Check className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(file.url)}
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-red-500 hover:bg-red-50"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                <p className="truncate text-xs font-medium text-[#333]">{file.filename}</p>
+                <p className="truncate text-xs text-[#888]">
+                  {file.size ? `${(file.size / 1024).toFixed(1)} KB` : ""}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   )
+}
+
+function cn(...classes: (string | false | undefined)[]) {
+  return classes.filter(Boolean).join(" ")
 }

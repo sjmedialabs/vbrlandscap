@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server"
-import { adminDb } from "@/lib/firebase-admin"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
+    const { adminDb } = await import("@/lib/firebase-admin")
     const snapshot = await adminDb.collection("sections").get()
     const sections: Record<string, unknown> = {}
 

@@ -23,10 +23,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Check existing session on mount
     fetch("/api/auth/verify")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.authenticated) {
-          setUser({ email: data.email, uid: data.uid })
+      .then(async (res) => {
+        const text = await res.text()
+        try {
+          const data = JSON.parse(text)
+          if (data.authenticated) {
+            setUser({ email: data.email, uid: data.uid })
+          }
+        } catch {
+          // Response was not JSON (e.g. HTML error page) - treat as not authenticated
         }
       })
       .catch(() => {})
@@ -40,7 +45,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ email, password }),
     })
 
-    const data = await res.json()
+    const text = await res.text()
+    let data
+    try {
+      data = JSON.parse(text)
+    } catch {
+      throw new Error("Server error: unexpected response. Check Firebase Admin env vars.")
+    }
 
     if (!res.ok) {
       throw new Error(data.error || "Login failed")

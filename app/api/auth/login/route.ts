@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server"
-import { adminAuth } from "@/lib/firebase-admin"
 import { cookies } from "next/headers"
 
 export async function POST(request: Request) {
@@ -10,39 +9,46 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email and password required" }, { status: 400 })
     }
 
-    // Use Firebase Auth REST API to sign in (server-side, no client SDK needed)
     const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY
+    if (!apiKey) {
+      return NextResponse.json({ error: "Firebase API key not configured" }, { status: 500 })
+    }
+
+    // Authenticate via Firebase Auth REST API
     const res = await fetch(
       `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          returnSecureToken: true,
-        }),
+        body: JSON.stringify({ email, password, returnSecureToken: true }),
       }
     )
 
     const data = await res.json()
 
     if (!res.ok) {
-      const errorMessage =
-        data?.error?.message === "EMAIL_NOT_FOUND" || data?.error?.message === "INVALID_PASSWORD" || data?.error?.message === "INVALID_LOGIN_CREDENTIALS"
+      const fbError = data?.error?.message || "Authentication failed"
+      const msg =
+        fbError === "EMAIL_NOT_FOUND" ||
+        fbError === "INVALID_PASSWORD" ||
+        fbError === "INVALID_LOGIN_CREDENTIALS"
           ? "Invalid email or password"
-          : data?.error?.message || "Authentication failed"
-      return NextResponse.json({ error: errorMessage }, { status: 401 })
+          : fbError
+      return NextResponse.json({ error: msg }, { status: 401 })
     }
 
-    // Create session cookie from the ID token
-    const idToken = data.idToken
-    const expiresIn = 60 * 60 * 24 * 5 * 1000 // 5 days
-    const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn })
+    // Store the idToken + refresh token in an httpOnly cookie as a simple JSON payload
+    const session = JSON.stringify({
+      idToken: data.idToken,
+      refreshToken: data.refreshToken,
+      email: data.email,
+      uid: data.localId,
+      expiresAt: Date.now() + Number(data.expiresIn) * 1000,
+    })
 
     const cookieStore = await cookies()
-    cookieStore.set("auth-token", sessionCookie, {
-      maxAge: expiresIn / 1000,
+    cookieStore.set("auth-session", session, {
+      maxAge: 60 * 60 * 24 * 5, // 5 days
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
