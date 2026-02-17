@@ -3,12 +3,12 @@ import { cookies } from "next/headers"
 
 async function verifyAuth() {
   const cookieStore = await cookies()
-  const token = cookieStore.get("auth-token")?.value
-  if (!token) return null
+  const raw = cookieStore.get("auth-session")?.value
+  if (!raw) return null
   try {
-    const { adminAuth } = await import("@/lib/firebase-admin")
-    const decoded = await adminAuth.verifySessionCookie(token, true)
-    return decoded
+    const session = JSON.parse(raw)
+    if (!session.uid || !session.email) return null
+    return { uid: session.uid, email: session.email }
   } catch {
     return null
   }
