@@ -1,28 +1,10 @@
-import { initializeApp, cert, getApps, getApp } from "firebase-admin/app"
-import { getFirestore } from "firebase-admin/firestore"
+import { NextResponse } from "next/server"
+import { adminDb } from "@/lib/firebase-admin"
 
-function getAdminApp() {
-  if (getApps().length) return getApp()
-  const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n")
-  return initializeApp({
-    credential: cert({
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-      privateKey,
-    }),
-  })
-}
-
-const app = getAdminApp()
-const db = getFirestore(app)
-
-async function seed() {
-  console.log("Starting Firestore seed...")
-  console.log("Project ID:", process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID)
-
+export async function POST() {
   try {
     // 1. HERO SECTION
-    await db.collection("sections").doc("hero").set({
+    await adminDb.collection("sections").doc("hero").set({
       heading: "Transforming Outdoor Spaces Into Natural Beauty.",
       statValue: "98 %",
       statLabel: "Reduction in\nemployee turnover",
@@ -33,10 +15,9 @@ async function seed() {
       reviewCount: "Based on 204 Reviews",
       tagline: "Effective Talent",
     })
-    console.log("Seeded: hero")
 
     // 2. ABOUT SECTION
-    await db.collection("sections").doc("about").set({
+    await adminDb.collection("sections").doc("about").set({
       badge: "About Our Company",
       heading: "Building Beautiful Landscapes Since Day One.",
       description: "From our very first project, we've been committed to creating outdoor spaces that feel natural, functional, and visually stunning. Our passion for landscaping.",
@@ -54,10 +35,9 @@ async function seed() {
       phoneLabel: "Call Anytime",
       phoneNumber: "+88 017 500 500",
     })
-    console.log("Seeded: about")
 
     // 3. SERVICES SECTION
-    await db.collection("sections").doc("services").set({
+    await adminDb.collection("sections").doc("services").set({
       badge: "Our Services",
       heading: "Empowering your workforce with expert services",
       bottomTag: "HURRY",
@@ -71,10 +51,9 @@ async function seed() {
         { image: "/images/service-4.png", title: "Seasonal Clean-up", description: "Expert planting, pruning, and maintenance for healthy.", order: 3 },
       ],
     })
-    console.log("Seeded: services")
 
     // 4. TRUST SECTION
-    await db.collection("sections").doc("trust").set({
+    await adminDb.collection("sections").doc("trust").set({
       badge: "Why Choose Us",
       heading: "Growing Trust Through Quality Work.",
       description: "Lorem ipsum dolor sit amet consectetur adipiscing elit commodo hendrerit, morbi non at metus nisi condimentum cubilia nulla, netus nec consequat",
@@ -89,10 +68,9 @@ async function seed() {
         { icon: "/images/icon-thumbs.png", title: "AI-Enhanced Portfolio Optimization", description: "15+ years crafting identities for Fortune 500s to fast-growth startups Backgrounds in design psychology", order: 2 },
       ],
     })
-    console.log("Seeded: trust")
 
     // 5. STATS SECTION
-    await db.collection("sections").doc("stats").set({
+    await adminDb.collection("sections").doc("stats").set({
       backgroundImage: "/images/stats-bg.png",
       stats: [
         { icon: "/images/icon-aloe.png", value: "10k +", label: "Hearts We've\nTouched", order: 0 },
@@ -107,10 +85,9 @@ async function seed() {
         { tag: "Landscaping", title: "Modern Backyard Makeover in California", href: "/services/backyard-makeover", order: 3 },
       ],
     })
-    console.log("Seeded: stats")
 
     // 6. PROCESS SECTION
-    await db.collection("sections").doc("process").set({
+    await adminDb.collection("sections").doc("process").set({
       badge: "How It Works",
       heading: "Designing Nature, One Step at a Time.",
       fieldImage: "/images/farmer-field.png",
@@ -127,10 +104,9 @@ async function seed() {
         { number: "04", title: "Site Analysis", description: "We offer maintenance services to keep your landscape healthy, beautiful, and thriving.", order: 3 },
       ],
     })
-    console.log("Seeded: process")
 
     // 7. TEAM SECTION
-    await db.collection("sections").doc("team").set({
+    await adminDb.collection("sections").doc("team").set({
       badge: "Expert Team",
       heading: "The Faces Behind Our Trusted Landscaping Services",
       partnersHeading: "Trusted By Leading Brands",
@@ -149,10 +125,9 @@ async function seed() {
         { name: "Greenin", image: "/images/logo-greenin.png", order: 4 },
       ],
     })
-    console.log("Seeded: team")
 
     // 8. CTA FORM SECTION
-    await db.collection("sections").doc("cta").set({
+    await adminDb.collection("sections").doc("cta").set({
       heading: "We're Here to Help!",
       contactBadge: "Contact Us",
       submitButtonText: "Submit Request",
@@ -161,10 +136,9 @@ async function seed() {
       testimonialQuote: "They made my home sparkle! Highly professional and fast service",
       testimonialAuthor: "Stiven Dowson",
     })
-    console.log("Seeded: cta")
 
     // 9. TESTIMONIALS SECTION
-    await db.collection("sections").doc("testimonials").set({
+    await adminDb.collection("sections").doc("testimonials").set({
       badge: "Testimonials",
       heading: "Hear from Our Happy Customers.",
       rating: "4.8",
@@ -176,10 +150,9 @@ async function seed() {
         { name: "David Hernandez", role: "Property Manager", text: "We have been using Landscope for ongoing maintenance for 3 years. Their reliability and quality are unmatched in the industry.", rating: 5, order: 2 },
       ],
     })
-    console.log("Seeded: testimonials")
 
     // 10. FAQ SECTION
-    await db.collection("sections").doc("faq").set({
+    await adminDb.collection("sections").doc("faq").set({
       badge: "FAQ",
       heading: "Your Most Important Questions Answered Here",
       decorationImage: "/images/leaf-decoration.jpg",
@@ -191,10 +164,9 @@ async function seed() {
         { question: "Is green services available for both homes and businesses?", answer: "Absolutely! We provide full-service landscaping for residential homes, commercial properties, HOA communities, and municipal spaces. Each project is customized to meet the unique requirements of the space and client.", order: 4 },
       ],
     })
-    console.log("Seeded: faq")
 
     // 11. BLOG SECTION
-    await db.collection("sections").doc("blog").set({
+    await adminDb.collection("sections").doc("blog").set({
       badge: "Blog",
       heading: "Check Out Latest News Update & Articles",
       posts: [
@@ -203,18 +175,16 @@ async function seed() {
         { title: "Top 5 Turf Maintenance Tips for a Lush Green Lawn", excerpt: "Professional tips to keep your lawn looking its best throughout every season of the year.", image: "/images/blog-3.jpg", date: "Jan 5, 2026", category: "Lawn Care", order: 2 },
       ],
     })
-    console.log("Seeded: blog")
 
     // 12. NEWSLETTER SECTION
-    await db.collection("sections").doc("newsletter").set({
+    await adminDb.collection("sections").doc("newsletter").set({
       heading: "Stay Updated With Expert Advice",
       description: "Subscribe to our newsletter for landscaping tips, seasonal guides, and exclusive offers.",
       buttonText: "Subscribe",
     })
-    console.log("Seeded: newsletter")
 
     // 13. NAVBAR
-    await db.collection("sections").doc("navbar").set({
+    await adminDb.collection("sections").doc("navbar").set({
       ctaText: "Get Appointment",
       links: [
         { label: "Home", href: "/", order: 0 },
@@ -227,10 +197,9 @@ async function seed() {
         { label: "Contact", href: "/contact", order: 7 },
       ],
     })
-    console.log("Seeded: navbar")
 
     // 14. FOOTER
-    await db.collection("sections").doc("footer").set({
+    await adminDb.collection("sections").doc("footer").set({
       brandName: "Landscope",
       brandDescription: "We are a full-service landscaping company dedicated to transforming outdoor spaces with sustainable and innovative design solutions.",
       address: "123 Green Valley Road, Garden District, CA 90210",
@@ -257,13 +226,11 @@ async function seed() {
         { label: "Maintenance", href: "/services/maintenance", order: 4 },
       ],
     })
-    console.log("Seeded: footer")
 
-    console.log("All seed data written successfully!")
-  } catch (error) {
-    console.error("Seed error:", error)
-    throw error
+    return NextResponse.json({ success: true, message: "All 14 sections seeded successfully!" })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error"
+    console.error("Seed error:", message)
+    return NextResponse.json({ success: false, error: message }, { status: 500 })
   }
 }
-
-seed()

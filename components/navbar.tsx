@@ -2,22 +2,25 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { Menu, X, Search } from "lucide-react"
 
-const navLinks = [
-  { label: "Home", href: "/" },
-  { label: "About us", href: "/about" },
-  { label: "VBR ECO-MATRIX", href: "/eco-matrix" },
-  { label: "Sectors", href: "/sectors" },
-  { label: "Projects", href: "/projects" },
-  { label: "Why VBR", href: "/why-vbr" },
-  { label: "Careers", href: "/careers" },
-  { label: "Contact", href: "/contact" },
-]
+interface NavLink {
+  label: string
+  href: string
+  order?: number
+}
 
-export default function Navbar() {
+interface NavbarProps {
+  data?: Record<string, unknown>
+}
+
+export default function Navbar({ data }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  if (!data) return null
+
+  const links = ((data.links as NavLink[]) || []).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  const ctaText = (data.ctaText as string) || ""
 
   return (
     <header className="absolute top-0 left-0 right-0 z-50">
@@ -39,7 +42,7 @@ export default function Navbar() {
 
         {/* Desktop Nav */}
         <nav className="hidden items-center gap-6 xl:flex">
-          {navLinks.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.label}
               href={link.href}
@@ -50,7 +53,7 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* Right side - Search + CTA + Hamburger */}
+        {/* Right side */}
         <div className="flex items-center gap-4">
           <button
             className="hidden text-primary-foreground/80 transition-colors hover:text-primary-foreground xl:block"
@@ -58,31 +61,29 @@ export default function Navbar() {
           >
             <Search className="h-5 w-5" />
           </button>
-          <Link
-            href="/contact"
-            className="hidden rounded-full border-2 border-secondary bg-secondary px-5 py-2 text-sm font-bold tracking-wide text-primary uppercase transition-all hover:brightness-110 xl:block"
-          >
-            Get Appointment
-          </Link>
+          {ctaText && (
+            <Link
+              href="/contact"
+              className="hidden rounded-full border-2 border-secondary bg-secondary px-5 py-2 text-sm font-bold tracking-wide text-primary uppercase transition-all hover:brightness-110 xl:block"
+            >
+              {ctaText}
+            </Link>
+          )}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="text-primary-foreground"
             aria-label="Toggle navigation"
           >
-            {mobileOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
+            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile / Sidebar Menu */}
+      {/* Mobile Menu */}
       {mobileOpen && (
         <div className="border-t border-primary-foreground/10 bg-primary/95 px-6 py-4 backdrop-blur-sm xl:hidden">
           <nav className="flex flex-col gap-3">
-            {navLinks.map((link) => (
+            {links.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
@@ -92,13 +93,15 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <Link
-              href="/contact"
-              className="mt-2 rounded-full bg-secondary px-6 py-2.5 text-center text-sm font-bold uppercase text-primary"
-              onClick={() => setMobileOpen(false)}
-            >
-              Get Appointment
-            </Link>
+            {ctaText && (
+              <Link
+                href="/contact"
+                className="mt-2 rounded-full bg-secondary px-6 py-2.5 text-center text-sm font-bold uppercase text-primary"
+                onClick={() => setMobileOpen(false)}
+              >
+                {ctaText}
+              </Link>
+            )}
           </nav>
         </div>
       )}
