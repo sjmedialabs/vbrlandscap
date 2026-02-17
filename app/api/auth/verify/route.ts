@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server"
-import { adminAuth } from "@/lib/firebase-admin"
 import { cookies } from "next/headers"
 
 export async function GET() {
@@ -11,6 +10,7 @@ export async function GET() {
       return NextResponse.json({ authenticated: false }, { status: 401 })
     }
 
+    const { adminAuth } = await import("@/lib/firebase-admin")
     const decoded = await adminAuth.verifySessionCookie(token, true)
     return NextResponse.json({
       authenticated: true,

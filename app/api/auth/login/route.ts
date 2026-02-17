@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server"
-import { adminAuth } from "@/lib/firebase-admin"
 import { cookies } from "next/headers"
 
 export async function POST(request: Request) {
@@ -48,6 +47,7 @@ export async function POST(request: Request) {
 
     let sessionCookie: string
     try {
+      const { adminAuth } = await import("@/lib/firebase-admin")
       sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn })
     } catch (cookieErr: unknown) {
       const msg = cookieErr instanceof Error ? cookieErr.message : "Unknown error"
