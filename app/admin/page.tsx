@@ -101,7 +101,29 @@ function SeedButton() {
   const { mutate } = useSections()
 
   const handleSeed = async () => {
-    const res = await fetch("/api/seed", { method: "POST" })
+    // Get the Firebase ID token from sessionStorage (stored at login)
+    let idToken = ""
+    try {
+      const stored = sessionStorage.getItem("admin-auth-session")
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        idToken = parsed.idToken || ""
+      }
+    } catch {
+      // ignore
+    }
+
+    if (!idToken) {
+      alert("Please log out and log in again to refresh your session.")
+      return
+    }
+
+    const res = await fetch("/api/seed", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${idToken}`,
+      },
+    })
     const result = await res.json()
     if (result.success) {
       await mutate()

@@ -16,10 +16,27 @@ export function useSection(id: string) {
   })
 }
 
+function getIdToken(): string {
+  try {
+    const stored = sessionStorage.getItem("admin-auth-session")
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      return parsed.idToken || ""
+    }
+  } catch {
+    // ignore
+  }
+  return ""
+}
+
 export async function updateSection(id: string, data: Record<string, unknown>) {
+  const idToken = getIdToken()
+  const headers: Record<string, string> = { "Content-Type": "application/json" }
+  if (idToken) headers["Authorization"] = `Bearer ${idToken}`
+
   const res = await fetch(`/api/sections/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(data),
   })
   if (!res.ok) throw new Error("Failed to update section")

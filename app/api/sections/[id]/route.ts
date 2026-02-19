@@ -26,7 +26,9 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await req.json()
-    await setSection(id, body, true)
+    const authHeader = req.headers.get("Authorization") || ""
+    const authToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : ""
+    await setSection(id, body, true, authToken)
     return NextResponse.json({ success: true, message: "Section updated" })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error"

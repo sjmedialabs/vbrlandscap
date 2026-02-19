@@ -134,7 +134,7 @@ export async function getSection(id: string): Promise<Record<string, unknown> | 
   return null
 }
 
-export async function setSection(id: string, data: Record<string, unknown>, merge = true) {
+export async function setSection(id: string, data: Record<string, unknown>, merge = true, authToken?: string) {
   const restBase = getRestBase()
   if (restBase) {
     try {
@@ -152,9 +152,11 @@ export async function setSection(id: string, data: Record<string, unknown>, merg
         }
       }
       const url = `${restBase}/sections/${id}?${params.toString()}`
+      const headers: Record<string, string> = { "Content-Type": "application/json" }
+      if (authToken) headers["Authorization"] = `Bearer ${authToken}`
       const res = await fetch(url, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ fields }),
       })
       if (res.ok) return
@@ -168,7 +170,7 @@ export async function setSection(id: string, data: Record<string, unknown>, merg
   throw new Error("No Firestore connection available - check NEXT_PUBLIC_FIREBASE_PROJECT_ID")
 }
 
-export async function setSectionFull(id: string, data: Record<string, unknown>) {
+export async function setSectionFull(id: string, data: Record<string, unknown>, authToken?: string) {
   const restBase = getRestBase()
   if (restBase) {
     try {
@@ -179,9 +181,11 @@ export async function setSectionFull(id: string, data: Record<string, unknown>) 
       }
 
       const url = `${restBase}/sections/${id}?key=${getApiKey()}`
+      const headers: Record<string, string> = { "Content-Type": "application/json" }
+      if (authToken) headers["Authorization"] = `Bearer ${authToken}`
       const res = await fetch(url, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ fields }),
       })
       if (res.ok) return

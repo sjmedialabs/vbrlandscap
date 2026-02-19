@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { setSectionFull } from "@/lib/firestore";
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    const authHeader = request.headers.get("Authorization") || ""
+    const authToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : ""
     const sections: Record<string, Record<string, unknown>> = {
       hero: {
         heading: "Transforming Outdoor Spaces Into Natural Beauty.",
@@ -525,7 +527,7 @@ export async function POST() {
 
     // Write all sections using unified Firestore helper (admin SDK if available, else client SDK)
     const promises = Object.entries(sections).map(([id, data]) =>
-      setSectionFull(id, data as Record<string, unknown>),
+      setSectionFull(id, data as Record<string, unknown>, authToken),
     );
     await Promise.all(promises);
 
