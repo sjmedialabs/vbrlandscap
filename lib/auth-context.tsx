@@ -23,69 +23,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // First check sessionStorage (works in iframes where cookies may be blocked)
+    // Check sessionStorage for existing session
     try {
       const stored = sessionStorage.getItem(SESSION_KEY)
       if (stored) {
         const parsed = JSON.parse(stored)
         if (parsed.email && parsed.uid) {
           setUser(parsed)
-          setLoading(false)
-          return
         }
       }
     } catch {
-      // sessionStorage not available or invalid data
+      // ignore
     }
-
-    // Fallback: check cookie-based session via API
-    fetch("/api/auth/verify")
-      .then(async (res) => {
-        const text = await res.text()
-        try {
-          const data = JSON.parse(text)
-          if (data.authenticated) {
-            const u = { email: data.email, uid: data.uid }
-            setUser(u)
-            try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(u)) } catch {}
-          }
-        } catch {
-          // not JSON
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    setLoading(false)
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    })
-
-    const text = await res.text()
-    let data
-    try {
-      data = JSON.parse(text)
-    } catch {
-      throw new Error("Server error: unexpected response. Check Firebase env vars.")
+    // Authenticate directly via Firebase Auth REST API (client-side, public API key)
+    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY
+    if (!apiKey) {
+      throw new Error("Firebase API key is not configured")
     }
+
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, returnSecureToken: true }),
+      }
+    )
+
+    const data = await res.json()
 
     if (!res.ok) {
-      throw new Error(data.error || "Login failed")
+      const fbError = data?.error?.message || "Authentication failed"
+      const msg =
+        fbError === "EMAIL_NOT_FOUND" ||
+        fbError === "INVALID_PASSWORD" ||
+        fbError === "INVALID_LOGIN_CREDENTIALS"
+          ? "Invalid email or password"
+          : fbError
+      throw new Error(msg)
     }
 
-    const u = data.user as AuthUser
+    const u: AuthUser = { email: data.email, uid: data.localId }
     setUser(u)
-    // Also persist to sessionStorage for iframe compatibility
-    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(u)) } catch {}
+    // Persist session to sessionStorage
+    try {
+      sessionStorage.setItem(
+        SESSION_KEY,
+        JSON.stringify({ ...u, idToken: data.idToken, refreshToken: data.refreshToken })
+      )
+    } catch {
+      // ignore
+    }
   }
 
   const signOut = async () => {
-    await fetch("/api/auth/session", { method: "DELETE" }).catch(() => {})
     setUser(null)
-    try { sessionStorage.removeItem(SESSION_KEY) } catch {}
+    try {
+      sessionStorage.removeItem(SESSION_KEY)
+    } catch {
+      // ignore
+    }
   }
 
   return (
