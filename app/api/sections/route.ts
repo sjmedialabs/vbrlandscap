@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server"
-import { db } from "@/lib/firebase"
-import { collection, getDocs } from "firebase/firestore"
+import { getAllSections } from "@/lib/firestore"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
-    const snapshot = await getDocs(collection(db, "sections"))
-    const sections: Record<string, unknown> = {}
-    snapshot.forEach((docSnap) => {
-      sections[docSnap.id] = { id: docSnap.id, ...docSnap.data() }
-    })
+    const sections = await getAllSections()
+    if (!sections) {
+      return NextResponse.json({})
+    }
     return NextResponse.json(sections)
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error"

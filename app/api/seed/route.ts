@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { setSectionFull } from "@/lib/firestore";
 
 export async function POST() {
   try {
@@ -425,9 +424,9 @@ export async function POST() {
       },
     };
 
-    // Write all sections using client SDK
+    // Write all sections using unified Firestore helper (admin SDK if available, else client SDK)
     const promises = Object.entries(sections).map(([id, data]) =>
-      setDoc(doc(db, "sections", id), data),
+      setSectionFull(id, data as Record<string, unknown>),
     );
     await Promise.all(promises);
 
