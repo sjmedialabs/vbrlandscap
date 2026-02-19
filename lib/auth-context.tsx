@@ -1,7 +1,6 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import { firebaseConfig } from "@/lib/firebase"
 
 interface AuthUser {
   email: string
@@ -24,7 +23,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check sessionStorage for existing session
     try {
       const stored = sessionStorage.getItem(SESSION_KEY)
       if (stored) {
@@ -40,15 +38,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    // Authenticate directly via Firebase Auth REST API (client-side, public API key)
-    const apiKey = firebaseConfig.apiKey
-    console.log("[v0] Firebase API key available:", !!apiKey)
+    // Read at call time, not module init time
+    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || ""
     if (!apiKey) {
       throw new Error("Firebase API key is not configured. Check NEXT_PUBLIC_FIREBASE_API_KEY in Vars.")
     }
+    const FIREBASE_API_KEY = apiKey
 
     const res = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -71,7 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const u: AuthUser = { email: data.email, uid: data.localId }
     setUser(u)
-    // Persist session to sessionStorage
     try {
       sessionStorage.setItem(
         SESSION_KEY,

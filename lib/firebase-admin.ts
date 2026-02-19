@@ -1,52 +1,73 @@
 import admin from "firebase-admin"
 
-function getAdminApp() {
-  if (admin.apps.length) return admin.apps[0]!
+function initAdmin() {
+  if (admin.apps.length) return
 
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL || process.env.FIREBASE_CLIENT_EMAIL
   const rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY || process.env.FIREBASE_PRIVATE_KEY
 
-  console.log("[v0] firebase-admin env check:", JSON.stringify({
-    projectId: projectId ? projectId.substring(0, 10) + "..." : "MISSING",
-    clientEmail: clientEmail ? clientEmail.substring(0, 15) + "..." : "MISSING",
-    rawKey: rawKey ? `present (${rawKey.length} chars, starts: ${rawKey.substring(0, 20)}...)` : "MISSING",
-  }))
-
   if (!projectId || !clientEmail || !rawKey) {
-    console.warn("[firebase-admin] Missing env vars - admin SDK not initialized. Using client SDK instead.")
-    return null
+    console.warn("[firebase-admin] Missing env vars - cannot initialize admin SDK")
+    return
   }
 
-  // Handle private key - may be JSON-escaped, base64 encoded, or raw
+  // Parse private key - handle all common formats from Vercel env vars
   let privateKey = rawKey
-  if (rawKey.startsWith('"') && rawKey.endsWith('"')) {
-    // JSON-escaped string
-    privateKey = JSON.parse(rawKey) as string
-  } else if (!rawKey.includes("-----BEGIN")) {
-    // Possibly base64 encoded
+
+  // 1. Strip wrapping quotes if present
+  if ((privateKey.startsWith('"') && privateKey.endsWith('"')) ||
+      (privateKey.startsWith("'") && privateKey.endsWith("'"))) {
+    privateKey = privateKey.slice(1, -1)
+  }
+
+  // 2. Replace literal \n sequences with real newlines
+  privateKey = privateKey.replace(/\\n/g, "\n")
+
+  // 3. If still no PEM header, try base64 decode
+  if (!privateKey.includes("-----BEGIN")) {
     try {
-      const decoded = Buffer.from(rawKey, "base64").toString("utf-8")
+      const decoded = Buffer.from(privateKey, "base64").toString("utf-8")
       if (decoded.includes("-----BEGIN")) {
         privateKey = decoded
       }
     } catch {
-      // Not base64, use as-is
+      // Not base64
     }
   }
-  // Always replace literal \n with actual newlines
-  privateKey = privateKey.replace(/\\n/g, "\n")
 
-  return admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId,
-      clientEmail,
-      privateKey,
-    }),
-  })
+  // 4. Ensure proper PEM newlines (some envs collapse all whitespace)
+  if (privateKey.includes("-----BEGIN") && !privateKey.includes("\n-----")) {
+    privateKey = privateKey
+      .replace(/-----BEGIN PRIVATE KEY-----\s*/, "-----BEGIN PRIVATE KEY-----\n")
+      .replace(/\s*-----END PRIVATE KEY-----/, "\n-----END PRIVATE KEY-----\n")
+  }
+
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
+    })
+    console.log("[firebase-admin] Initialized successfully")
+  } catch (err) {
+    console.error("[firebase-admin] Init failed:", err instanceof Error ? err.message : err)
+  }
 }
 
-const adminApp = getAdminApp()
+export function getAdminDb(): FirebaseFirestore.Firestore | null {
+  initAdmin()
+  return admin.apps.length ? admin.firestore() : null
+}
 
-export const adminDb = adminApp ? admin.firestore() : null
-export const adminAuth = adminApp ? admin.auth() : null
+export function getAdminAuth() {
+  initAdmin()
+  return admin.apps.length ? admin.auth() : null
+}
+
+// Keep backward-compatible exports (lazy getters)
+export const adminDb = new Proxy({} as FirebaseFirestore.Firestore, {
+  get(_, prop) {
+    const db = getAdminDb()
+    if (!db) throw new Error("Firebase Admin not initialized")
+    return (db as Record<string | symbol, unknown>)[prop]
+  },
+})
