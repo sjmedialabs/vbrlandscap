@@ -1,44 +1,48 @@
 import admin from "firebase-admin"
 
 function parsePrivateKey(raw: string): string {
-  let key = raw
+  // Nuclear option: extract ONLY the base64 content from the PEM key,
+  // strip ALL non-base64 characters (backslashes, stray whitespace, etc.),
+  // then reconstruct a clean PEM envelope.
+  // This handles every possible mangling scenario from env vars.
 
-  // Fix: Vercel env vars store the key with literal backslash + real newline (\<LF>)
-  // Strip stray backslashes that appear right before a real newline
-  key = key.replace(/\\\n/g, "\n")
+  let input = raw
 
-  // Also handle escaped \\n sequences (two-char literal \n)
-  key = key.replace(/\\n/g, "\n")
-
-  // Strip wrapping quotes
-  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
-    key = key.slice(1, -1).replace(/\\n/g, "\n")
+  // Try JSON.parse first in case the whole thing is a JSON string
+  try {
+    const parsed = JSON.parse(input)
+    if (typeof parsed === "string") input = parsed
+  } catch {
+    // not JSON, continue
   }
 
-  // Try JSON.parse for double-escaped strings
-  if (!key.includes("-----BEGIN")) {
-    try {
-      const parsed = JSON.parse(raw)
-      if (typeof parsed === "string") key = parsed
-    } catch {
-      // Not JSON
+  // Replace all common newline representations
+  input = input.replace(/\\n/g, "\n")
+
+  // Extract base64 content between PEM headers
+  const pemMatch = input.match(/-----BEGIN[^-]*-----([^-]+)-----END[^-]*-----/)
+  if (pemMatch) {
+    // Strip everything that's not a valid base64 character
+    const base64Content = pemMatch[1].replace(/[^A-Za-z0-9+/=]/g, "")
+
+    // Reconstruct clean PEM with proper 64-char line wrapping
+    const lines: string[] = []
+    for (let i = 0; i < base64Content.length; i += 64) {
+      lines.push(base64Content.substring(i, i + 64))
     }
+
+    return `-----BEGIN PRIVATE KEY-----\n${lines.join("\n")}\n-----END PRIVATE KEY-----\n`
   }
 
-  // base64 decode fallback
-  if (!key.includes("-----BEGIN")) {
-    try {
-      const decoded = Buffer.from(key, "base64").toString("utf-8")
-      if (decoded.includes("-----BEGIN")) key = decoded
-    } catch {
-      // Not base64
-    }
+  // If no PEM header found, try base64 decode
+  try {
+    const decoded = Buffer.from(input, "base64").toString("utf-8")
+    if (decoded.includes("-----BEGIN")) return parsePrivateKey(decoded)
+  } catch {
+    // not base64
   }
 
-  // Ensure trailing newline
-  if (!key.endsWith("\n")) key += "\n"
-
-  return key
+  return input
 }
 
 function initAdmin() {
