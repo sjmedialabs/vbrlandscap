@@ -17,11 +17,13 @@ interface FooterLink {
 
 interface FooterProps {
   data?: Record<string, unknown>
+  branding?: Record<string, unknown>
 }
 
-export default function Footer({ data }: FooterProps) {
+export default function Footer({ data, branding }: FooterProps) {
   if (!data) return null
 
+  const footerLogo = (branding?.footerLogo as string) || ""
   const brandName = data.brandName as string
   const brandDescription = data.brandDescription as string
   const address = data.address as string
@@ -38,7 +40,11 @@ export default function Footer({ data }: FooterProps) {
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div>
             <Link href="/" className="flex items-center gap-2">
-              <Leaf className="h-7 w-7 text-secondary" />
+              {footerLogo ? (
+                <Image src={footerLogo} alt={brandName} width={120} height={44} className="h-11 w-auto object-contain" />
+              ) : (
+                <Leaf className="h-7 w-7 text-secondary" />
+              )}
               <span className="text-xl font-bold text-primary-foreground">{brandName}</span>
             </Link>
             <p className="mt-4 text-sm leading-relaxed text-primary-foreground/60">{brandDescription}</p>

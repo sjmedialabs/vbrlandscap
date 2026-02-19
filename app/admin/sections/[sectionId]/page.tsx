@@ -7,10 +7,169 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar"
 import { SectionEditor } from "@/components/admin/section-editor"
 import { Loader2 } from "lucide-react"
 
-const sectionConfigs: Record<
-  string,
-  { title: string; fields: { key: string; label: string; type: "text" | "textarea" | "image" | "array" | "object-array"; fields?: { key: string; label: string; type: "text" | "textarea" | "image" | "array" | "object-array" }[] }[] }
-> = {
+type FieldType = "text" | "textarea" | "image" | "color" | "array" | "object-array"
+interface FieldDef { key: string; label: string; type: FieldType; fields?: FieldDef[] }
+
+const sectionConfigs: Record<string, { title: string; fields: FieldDef[] }> = {
+  branding: {
+    title: "Brand Customization",
+    fields: [
+      { key: "siteName", label: "Site Name", type: "text" },
+      { key: "navbarLogo", label: "Navbar Logo", type: "image" },
+      { key: "footerLogo", label: "Footer Logo", type: "image" },
+      { key: "favicon", label: "Favicon (ICO/PNG)", type: "image" },
+      { key: "primaryColor", label: "Primary Color", type: "color" },
+      { key: "secondaryColor", label: "Secondary Color", type: "color" },
+      { key: "accentColor", label: "Accent Color", type: "color" },
+    ],
+  },
+  seo: {
+    title: "SEO Settings",
+    fields: [
+      {
+        key: "pages",
+        label: "Page SEO",
+        type: "object-array",
+        fields: [
+          { key: "slug", label: "Page Slug (e.g. / or /about)", type: "text" },
+          { key: "title", label: "Meta Title", type: "text" },
+          { key: "description", label: "Meta Description", type: "textarea" },
+          { key: "ogImage", label: "OG Image", type: "image" },
+          { key: "keywords", label: "Keywords (comma-separated)", type: "text" },
+        ],
+      },
+    ],
+  },
+  "page-about": {
+    title: "About Page",
+    fields: [
+      { key: "heroTitle", label: "Hero Title", type: "text" },
+      { key: "heroSubtitle", label: "Hero Subtitle", type: "textarea" },
+      { key: "heroImage", label: "Hero Background Image", type: "image" },
+      { key: "content", label: "Page Content", type: "textarea" },
+      { key: "teamHeading", label: "Team Heading", type: "text" },
+      { key: "teamDescription", label: "Team Description", type: "textarea" },
+      {
+        key: "values",
+        label: "Company Values",
+        type: "object-array",
+        fields: [
+          { key: "icon", label: "Icon", type: "image" },
+          { key: "title", label: "Title", type: "text" },
+          { key: "description", label: "Description", type: "textarea" },
+        ],
+      },
+    ],
+  },
+  "page-eco-matrix": {
+    title: "Eco Matrix Page",
+    fields: [
+      { key: "heroTitle", label: "Hero Title", type: "text" },
+      { key: "heroSubtitle", label: "Hero Subtitle", type: "textarea" },
+      { key: "heroImage", label: "Hero Background Image", type: "image" },
+      { key: "content", label: "Page Content", type: "textarea" },
+      {
+        key: "features",
+        label: "Eco Features",
+        type: "object-array",
+        fields: [
+          { key: "icon", label: "Icon", type: "image" },
+          { key: "title", label: "Title", type: "text" },
+          { key: "description", label: "Description", type: "textarea" },
+        ],
+      },
+    ],
+  },
+  "page-sectors": {
+    title: "Sectors Page",
+    fields: [
+      { key: "heroTitle", label: "Hero Title", type: "text" },
+      { key: "heroSubtitle", label: "Hero Subtitle", type: "textarea" },
+      { key: "heroImage", label: "Hero Background Image", type: "image" },
+      {
+        key: "sectors",
+        label: "Sectors",
+        type: "object-array",
+        fields: [
+          { key: "image", label: "Image", type: "image" },
+          { key: "title", label: "Title", type: "text" },
+          { key: "description", label: "Description", type: "textarea" },
+        ],
+      },
+    ],
+  },
+  "page-projects": {
+    title: "Projects Page",
+    fields: [
+      { key: "heroTitle", label: "Hero Title", type: "text" },
+      { key: "heroSubtitle", label: "Hero Subtitle", type: "textarea" },
+      { key: "heroImage", label: "Hero Background Image", type: "image" },
+      {
+        key: "projects",
+        label: "Projects",
+        type: "object-array",
+        fields: [
+          { key: "image", label: "Image", type: "image" },
+          { key: "title", label: "Title", type: "text" },
+          { key: "category", label: "Category", type: "text" },
+          { key: "description", label: "Description", type: "textarea" },
+        ],
+      },
+    ],
+  },
+  "page-why-vbr": {
+    title: "Why VBR Page",
+    fields: [
+      { key: "heroTitle", label: "Hero Title", type: "text" },
+      { key: "heroSubtitle", label: "Hero Subtitle", type: "textarea" },
+      { key: "heroImage", label: "Hero Background Image", type: "image" },
+      { key: "content", label: "Page Content", type: "textarea" },
+      {
+        key: "reasons",
+        label: "Reasons to Choose VBR",
+        type: "object-array",
+        fields: [
+          { key: "icon", label: "Icon", type: "image" },
+          { key: "title", label: "Title", type: "text" },
+          { key: "description", label: "Description", type: "textarea" },
+        ],
+      },
+    ],
+  },
+  "page-careers": {
+    title: "Careers Page",
+    fields: [
+      { key: "heroTitle", label: "Hero Title", type: "text" },
+      { key: "heroSubtitle", label: "Hero Subtitle", type: "textarea" },
+      { key: "heroImage", label: "Hero Background Image", type: "image" },
+      { key: "content", label: "Page Content", type: "textarea" },
+      {
+        key: "openings",
+        label: "Job Openings",
+        type: "object-array",
+        fields: [
+          { key: "title", label: "Job Title", type: "text" },
+          { key: "location", label: "Location", type: "text" },
+          { key: "type", label: "Type (Full-time, Part-time)", type: "text" },
+          { key: "description", label: "Description", type: "textarea" },
+        ],
+      },
+    ],
+  },
+  "page-contact": {
+    title: "Contact Page",
+    fields: [
+      { key: "heroTitle", label: "Hero Title", type: "text" },
+      { key: "heroSubtitle", label: "Hero Subtitle", type: "textarea" },
+      { key: "heroImage", label: "Hero Background Image", type: "image" },
+      { key: "address", label: "Address", type: "textarea" },
+      { key: "phone", label: "Phone", type: "text" },
+      { key: "email", label: "Email", type: "text" },
+      { key: "mapEmbedUrl", label: "Google Maps Embed URL", type: "text" },
+      { key: "formHeading", label: "Form Heading", type: "text" },
+      { key: "formDescription", label: "Form Description", type: "textarea" },
+    ],
+  },
   hero: {
     title: "Hero Section",
     fields: [

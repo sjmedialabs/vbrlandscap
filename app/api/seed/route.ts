@@ -355,6 +355,105 @@ export async function POST() {
           },
         ],
       },
+      branding: {
+        siteName: "VBR Landscaping",
+        navbarLogo: "",
+        footerLogo: "",
+        favicon: "",
+        primaryColor: "#2d6a2e",
+        secondaryColor: "#6d8c21",
+        accentColor: "#c5a72e",
+      },
+      seo: {
+        pages: [
+          { slug: "/", title: "VBR Landscaping - Professional Landscaping Services", description: "Transforming outdoor spaces into natural beauty with professional landscaping services.", ogImage: "", keywords: "landscaping, garden design, outdoor spaces, VBR", order: 0 },
+          { slug: "/about", title: "About Us - VBR Landscaping", description: "Learn about our team and our commitment to beautiful landscapes.", ogImage: "", keywords: "about, team, landscaping company", order: 1 },
+          { slug: "/eco-matrix", title: "VBR ECO-MATRIX - Sustainable Landscaping", description: "Discover our eco-friendly approach to landscaping.", ogImage: "", keywords: "eco-matrix, sustainable, green landscaping", order: 2 },
+          { slug: "/sectors", title: "Sectors - VBR Landscaping", description: "Industries and sectors we serve.", ogImage: "", keywords: "sectors, industries, commercial, residential", order: 3 },
+          { slug: "/projects", title: "Our Projects - VBR Landscaping", description: "Explore our portfolio of completed landscaping projects.", ogImage: "", keywords: "projects, portfolio, landscaping work", order: 4 },
+          { slug: "/why-vbr", title: "Why VBR - VBR Landscaping", description: "Discover why VBR Landscaping is the right choice for you.", ogImage: "", keywords: "why VBR, advantages, quality", order: 5 },
+          { slug: "/careers", title: "Careers - VBR Landscaping", description: "Join our team and build a career in landscaping.", ogImage: "", keywords: "careers, jobs, landscaping jobs", order: 6 },
+          { slug: "/contact", title: "Contact Us - VBR Landscaping", description: "Get in touch with our team for landscaping inquiries.", ogImage: "", keywords: "contact, inquiries, phone, email", order: 7 },
+        ],
+      },
+      "page-about": {
+        heroTitle: "About VBR Landscaping",
+        heroSubtitle: "Building Beautiful Landscapes Since Day One",
+        heroImage: "/images/about-person.jpg",
+        content: "From our very first project, we've been committed to creating outdoor spaces that feel natural, functional, and visually stunning. Our passion for landscaping drives everything we do.",
+        teamHeading: "Meet Our Team",
+        teamDescription: "Our team of experienced professionals brings creativity and expertise to every project.",
+        values: [
+          { icon: "/images/icon-landscape.png", title: "Quality Craftsmanship", description: "Every project reflects our commitment to excellence.", order: 0 },
+          { icon: "/images/icon-hand-plant.png", title: "Sustainable Practices", description: "We prioritize eco-friendly solutions in all our work.", order: 1 },
+          { icon: "/images/icon-eye.png", title: "Client-Focused", description: "Your vision is our priority from start to finish.", order: 2 },
+        ],
+      },
+      "page-eco-matrix": {
+        heroTitle: "VBR ECO-MATRIX",
+        heroSubtitle: "Our Commitment to Sustainable Landscaping",
+        heroImage: "/images/stats-bg.png",
+        content: "The VBR ECO-MATRIX is our proprietary approach to sustainable landscaping that balances beauty with environmental responsibility.",
+        features: [
+          { icon: "/images/icon-aloe.png", title: "Water Conservation", description: "Smart irrigation and drought-resistant plantings.", order: 0 },
+          { icon: "/images/icon-hand-plant.png", title: "Native Plants", description: "Local flora that thrives naturally in your environment.", order: 1 },
+          { icon: "/images/icon-thumbs.png", title: "Soil Health", description: "Organic practices that nurture the ground.", order: 2 },
+        ],
+      },
+      "page-sectors": {
+        heroTitle: "Sectors We Serve",
+        heroSubtitle: "Professional Landscaping Across Industries",
+        heroImage: "/images/hero-bg.jpg",
+        sectors: [
+          { image: "/images/service-1.png", title: "Residential", description: "Beautiful gardens and outdoor living spaces for homeowners.", order: 0 },
+          { image: "/images/service-2.png", title: "Commercial", description: "Professional landscapes for offices, retail, and more.", order: 1 },
+          { image: "/images/service-3.png", title: "Municipal", description: "Public parks, streetscapes, and community spaces.", order: 2 },
+          { image: "/images/service-4.png", title: "Hospitality", description: "Stunning grounds for hotels, resorts, and restaurants.", order: 3 },
+        ],
+      },
+      "page-projects": {
+        heroTitle: "Our Projects",
+        heroSubtitle: "A Showcase of Our Finest Work",
+        heroImage: "/images/cta-garden-bg.png",
+        projects: [
+          { image: "/images/blog-1.jpg", title: "Modern Garden Retreat", category: "Residential", description: "A complete backyard transformation.", order: 0 },
+          { image: "/images/blog-2.jpg", title: "Corporate Campus Green", category: "Commercial", description: "Sustainable landscape for a tech campus.", order: 1 },
+          { image: "/images/blog-3.jpg", title: "Community Park Revamp", category: "Municipal", description: "Revitalizing a neighborhood gathering space.", order: 2 },
+        ],
+      },
+      "page-why-vbr": {
+        heroTitle: "Why Choose VBR",
+        heroSubtitle: "The VBR Difference in Every Detail",
+        heroImage: "/images/why-choose-mask.png",
+        content: "With over 25 years of experience, VBR Landscaping delivers unmatched quality, innovation, and customer satisfaction.",
+        reasons: [
+          { icon: "/images/icon-hand-plant.png", title: "25+ Years Experience", description: "Decades of expertise in creating stunning landscapes.", order: 0 },
+          { icon: "/images/icon-aloe.png", title: "Eco-Friendly Approach", description: "Sustainable practices built into every project.", order: 1 },
+          { icon: "/images/icon-thumbs.png", title: "100% Satisfaction", description: "We don't stop until you love it.", order: 2 },
+        ],
+      },
+      "page-careers": {
+        heroTitle: "Join Our Team",
+        heroSubtitle: "Build a Career in Landscaping",
+        heroImage: "/images/farmer-field.png",
+        content: "We are always looking for passionate individuals to join our growing team. If you love the outdoors and have a passion for creating beautiful spaces, we want to hear from you.",
+        openings: [
+          { title: "Landscape Designer", location: "Garden District, CA", type: "Full-time", description: "Create innovative landscape designs for residential and commercial clients.", order: 0 },
+          { title: "Crew Leader", location: "Garden District, CA", type: "Full-time", description: "Lead installation teams and ensure quality on every project.", order: 1 },
+          { title: "Maintenance Technician", location: "Garden District, CA", type: "Part-time", description: "Maintain client landscapes to the highest standards.", order: 2 },
+        ],
+      },
+      "page-contact": {
+        heroTitle: "Contact Us",
+        heroSubtitle: "We Would Love to Hear From You",
+        heroImage: "/images/cta-garden-bg.png",
+        address: "123 Green Valley Road, Garden District, CA 90210",
+        phone: "+1 (555) 123-4567",
+        email: "info@vbrlandscaping.com",
+        mapEmbedUrl: "",
+        formHeading: "Send Us a Message",
+        formDescription: "Fill out the form below and our team will get back to you within 24 hours.",
+      },
       newsletter: {
         heading: "Stay Updated With Expert Advice",
         description:
@@ -432,7 +531,7 @@ export async function POST() {
 
     return NextResponse.json({
       success: true,
-      message: "All 14 sections seeded successfully!",
+      message: "All sections seeded successfully (homepage + branding + seo + pages)!",
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
