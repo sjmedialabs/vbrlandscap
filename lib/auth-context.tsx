@@ -16,22 +16,41 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
+const SESSION_KEY = "admin-auth-session"
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check existing session on mount
+    // First check sessionStorage (works in iframes where cookies may be blocked)
+    try {
+      const stored = sessionStorage.getItem(SESSION_KEY)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed.email && parsed.uid) {
+          setUser(parsed)
+          setLoading(false)
+          return
+        }
+      }
+    } catch {
+      // sessionStorage not available or invalid data
+    }
+
+    // Fallback: check cookie-based session via API
     fetch("/api/auth/verify")
       .then(async (res) => {
         const text = await res.text()
         try {
           const data = JSON.parse(text)
           if (data.authenticated) {
-            setUser({ email: data.email, uid: data.uid })
+            const u = { email: data.email, uid: data.uid }
+            setUser(u)
+            try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(u)) } catch {}
           }
         } catch {
-          // Response was not JSON (e.g. HTML error page) - treat as not authenticated
+          // not JSON
         }
       })
       .catch(() => {})
@@ -50,19 +69,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       data = JSON.parse(text)
     } catch {
-      throw new Error("Server error: unexpected response. Check Firebase Admin env vars.")
+      throw new Error("Server error: unexpected response. Check Firebase env vars.")
     }
 
     if (!res.ok) {
       throw new Error(data.error || "Login failed")
     }
 
-    setUser(data.user)
+    const u = data.user as AuthUser
+    setUser(u)
+    // Also persist to sessionStorage for iframe compatibility
+    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(u)) } catch {}
   }
 
   const signOut = async () => {
-    await fetch("/api/auth/session", { method: "DELETE" })
+    await fetch("/api/auth/session", { method: "DELETE" }).catch(() => {})
     setUser(null)
+    try { sessionStorage.removeItem(SESSION_KEY) } catch {}
   }
 
   return (
