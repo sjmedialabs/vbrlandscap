@@ -1,55 +1,53 @@
-import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
+import { NextResponse } from "next/server"
+import { db } from "@/lib/firebase"
+import { doc, getDoc, setDoc } from "firebase/firestore"
+import { cookies } from "next/headers"
 
-// GET single section (for editor load)
-export async function GET(
-  req: Request,
-  { params }: { params: { slug: string } },
-) {
+async function verifyAuth() {
+  const cookieStore = await cookies()
+  const raw = cookieStore.get("auth-session")?.value
+  if (!raw) return null
   try {
-    const doc = await adminDb.collection("sections").doc(params.slug).get();
-
-    if (!doc.exists) {
-      return NextResponse.json({ error: "Section not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({
-      id: doc.id,
-      ...doc.data(),
-    });
-  } catch (error: any) {
-    console.error("GET /sections/[slug] error:", error);
-
-    return NextResponse.json(
-      { error: error?.message || "Fetch failed" },
-      { status: 500 },
-    );
+    const session = JSON.parse(raw)
+    if (!session.uid || !session.email) return null
+    return { uid: session.uid, email: session.email }
+  } catch {
+    return null
   }
 }
 
-// UPDATE section (Save button)
-export async function PUT(
+export async function GET(
   req: Request,
-  { params }: { params: { slug: string } },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const body = await req.json();
+    const { id } = await params
+    const docRef = doc(db, "sections", id)
+    const docSnap = await getDoc(docRef)
+    if (!docSnap.exists()) {
+      return NextResponse.json({ error: "Section not found" }, { status: 404 })
+    }
+    return NextResponse.json({ id: docSnap.id, ...docSnap.data() })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error"
+    console.error("GET /sections/[id] error:", message)
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
 
-    await adminDb
-      .collection("sections")
-      .doc(params.slug)
-      .set(body, { merge: true });
-
-    return NextResponse.json({
-      success: true,
-      message: "Section updated",
-    });
-  } catch (error: any) {
-    console.error("PUT /sections/[slug] error:", error);
-
-    return NextResponse.json(
-      { error: error?.message || "Update failed" },
-      { status: 500 },
-    );
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const body = await req.json()
+    const docRef = doc(db, "sections", id)
+    await setDoc(docRef, body, { merge: true })
+    return NextResponse.json({ success: true, message: "Section updated" })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error"
+    console.error("PUT /sections/[id] error:", message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
