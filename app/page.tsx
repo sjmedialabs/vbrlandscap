@@ -40,7 +40,7 @@ export default async function HomePage() {
 
   return (
     <main>
-      <Navbar data={sections.navbar} />
+      <Navbar data={sections.navbar} branding={sections.branding} />
       <HeroSection data={sections.hero} />
       <AboutSection data={sections.about} />
       <ServicesSection data={sections.services} />
@@ -53,7 +53,7 @@ export default async function HomePage() {
       <FAQSection data={sections.faq} />
       <BlogSection data={sections.blog} />
       <NewsletterSection data={sections.newsletter} />
-      <Footer data={sections.footer} />
+      <Footer data={sections.footer} branding={sections.branding} />
     </main>
   )
 }
