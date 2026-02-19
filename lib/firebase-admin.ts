@@ -1,29 +1,31 @@
 import admin from "firebase-admin"
 
 function parsePrivateKey(raw: string): string {
-  // Method 1: JSON.parse handles escaped strings with literal \n
-  try {
-    const parsed = JSON.parse(raw)
-    if (typeof parsed === "string") return parsed.endsWith("\n") ? parsed : parsed + "\n"
-  } catch {
-    // Not valid JSON
-  }
-
-  // Method 2: Replace literal \n sequences
-  if (raw.includes("\\n")) {
-    const replaced = raw.replace(/\\n/g, "\n")
-    if (replaced.includes("-----BEGIN")) {
-      return replaced.endsWith("\n") ? replaced : replaced + "\n"
-    }
-  }
-
-  // Method 3: Strip wrapping quotes
   let key = raw
+
+  // Fix: Vercel env vars store the key with literal backslash + real newline (\<LF>)
+  // Strip stray backslashes that appear right before a real newline
+  key = key.replace(/\\\n/g, "\n")
+
+  // Also handle escaped \\n sequences (two-char literal \n)
+  key = key.replace(/\\n/g, "\n")
+
+  // Strip wrapping quotes
   if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
     key = key.slice(1, -1).replace(/\\n/g, "\n")
   }
 
-  // Method 4: base64 decode
+  // Try JSON.parse for double-escaped strings
+  if (!key.includes("-----BEGIN")) {
+    try {
+      const parsed = JSON.parse(raw)
+      if (typeof parsed === "string") key = parsed
+    } catch {
+      // Not JSON
+    }
+  }
+
+  // base64 decode fallback
   if (!key.includes("-----BEGIN")) {
     try {
       const decoded = Buffer.from(key, "base64").toString("utf-8")
@@ -33,7 +35,10 @@ function parsePrivateKey(raw: string): string {
     }
   }
 
-  return key.endsWith("\n") ? key : key + "\n"
+  // Ensure trailing newline
+  if (!key.endsWith("\n")) key += "\n"
+
+  return key
 }
 
 function initAdmin() {
@@ -50,16 +55,6 @@ function initAdmin() {
 
   try {
     const privateKey = parsePrivateKey(rawKey)
-    console.log("[v0] PEM key debug:", JSON.stringify({
-      rawLen: rawKey.length,
-      rawFirst50: rawKey.substring(0, 50),
-      rawHasRealNewlines: rawKey.includes("\n"),
-      rawHasEscapedNewlines: rawKey.includes("\\n"),
-      parsedLen: privateKey.length,
-      parsedFirst50: privateKey.substring(0, 50),
-      parsedHasRealNewlines: privateKey.includes("\n"),
-      parsedLineCount: privateKey.split("\n").length,
-    }))
     admin.initializeApp({
       credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
     })

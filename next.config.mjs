@@ -4,6 +4,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
+    domains: ['t52u1iil6s9tfded.public.blob.vercel-storage.com'],
     remotePatterns: [
       {
         protocol: 'https',
