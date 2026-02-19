@@ -85,9 +85,9 @@ function docToObject(doc: FirestoreDocument): Record<string, unknown> {
   return obj
 }
 
-// ---------- No admin SDK fallback ----------
+// ---------- REST-only mode ----------
 // All Firestore operations use the REST API exclusively.
-// The admin SDK had persistent PEM key parsing issues in this env.
+// No admin SDK is imported or used anywhere in this module.
 
 // ---------- public API ----------
 
