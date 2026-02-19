@@ -1,55 +1,36 @@
-import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
+import { NextResponse } from "next/server"
+import { getSection, setSection } from "@/lib/firestore"
 
-// GET single section (for editor load)
 export async function GET(
   req: Request,
-  { params }: { params: { slug: string } },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const doc = await adminDb.collection("sections").doc(params.slug).get();
-
-    if (!doc.exists) {
-      return NextResponse.json({ error: "Section not found" }, { status: 404 });
+    const { id } = await params
+    const data = await getSection(id)
+    if (!data) {
+      return NextResponse.json({ error: "Section not found" }, { status: 404 })
     }
-
-    return NextResponse.json({
-      id: doc.id,
-      ...doc.data(),
-    });
-  } catch (error: any) {
-    console.error("GET /sections/[slug] error:", error);
-
-    return NextResponse.json(
-      { error: error?.message || "Fetch failed" },
-      { status: 500 },
-    );
+    return NextResponse.json(data)
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error"
+    console.error("GET /sections/[id] error:", message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
-// UPDATE section (Save button)
 export async function PUT(
   req: Request,
-  { params }: { params: { slug: string } },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const body = await req.json();
-
-    await adminDb
-      .collection("sections")
-      .doc(params.slug)
-      .set(body, { merge: true });
-
-    return NextResponse.json({
-      success: true,
-      message: "Section updated",
-    });
-  } catch (error: any) {
-    console.error("PUT /sections/[slug] error:", error);
-
-    return NextResponse.json(
-      { error: error?.message || "Update failed" },
-      { status: 500 },
-    );
+    const { id } = await params
+    const body = await req.json()
+    await setSection(id, body, true)
+    return NextResponse.json({ success: true, message: "Section updated" })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error"
+    console.error("PUT /sections/[id] error:", message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

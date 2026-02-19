@@ -12,31 +12,17 @@ import FAQSection from "@/components/sections/faq"
 import BlogSection from "@/components/sections/blog"
 import NewsletterSection from "@/components/sections/newsletter"
 import Footer from "@/components/footer"
-import { db } from "@/lib/firebase"
-import { collection, getDocs } from "firebase/firestore"
+import { getAllSections } from "@/lib/firestore"
 
 export const dynamic = "force-dynamic"
 
-async function getAllSections(): Promise<Record<string, Record<string, unknown>> | null> {
-  try {
-    const snapshot = await getDocs(collection(db, "sections"))
-    if (snapshot.empty) {
-      console.log("[v0] Firestore 'sections' collection is empty. Please seed the database.")
-      return null
-    }
-    const sections: Record<string, Record<string, unknown>> = {}
-    snapshot.forEach((docSnap) => {
-      sections[docSnap.id] = { id: docSnap.id, ...docSnap.data() }
-    })
-    return sections
-  } catch (error) {
-    console.error("[v0] Failed to fetch sections from Firestore:", error)
-    return null
-  }
-}
-
 export default async function HomePage() {
-  const sections = await getAllSections()
+  let sections: Record<string, Record<string, unknown>> | null = null
+  try {
+    sections = await getAllSections()
+  } catch (error) {
+    console.error("[v0] Failed to fetch sections:", error)
+  }
 
   if (!sections) {
     return (
