@@ -8,7 +8,7 @@ import Image from "next/image"
 
 export const dynamic = "force-dynamic"
 
-const validSlugs = ["about", "eco-matrix", "sectors", "projects", "why-vbr", "careers", "contact"]
+const validSlugs = ["about", "sectors", "projects", "why-vbr", "careers", "contact"]
 
 // Dynamic SEO metadata
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -121,7 +121,6 @@ function ContactForm({ data }: { data: Record<string, unknown> }) {
 // Map slug to the Firestore doc id and array key
 const pageConfig: Record<string, { docId: string; arrayKey?: string; arrayTitle?: string }> = {
   about: { docId: "page-about", arrayKey: "values", arrayTitle: "Our Values" },
-  "eco-matrix": { docId: "page-eco-matrix", arrayKey: "features", arrayTitle: "Our Approach" },
   sectors: { docId: "page-sectors", arrayKey: "sectors", arrayTitle: "Sectors We Serve" },
   projects: { docId: "page-projects", arrayKey: "projects", arrayTitle: "Featured Projects" },
   "why-vbr": { docId: "page-why-vbr", arrayKey: "reasons", arrayTitle: "Why Choose VBR" },

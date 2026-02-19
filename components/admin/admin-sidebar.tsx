@@ -76,7 +76,9 @@ const sidebarGroups: SidebarGroup[] = [
     label: "Pages",
     links: [
       { label: "About Page", href: "/admin/sections/page-about", icon: FileText },
-      { label: "Eco Matrix", href: "/admin/sections/page-eco-matrix", icon: TreePine },
+      { label: "ECO Overview", href: "/admin/sections/page-eco-overview", icon: Globe },
+      { label: "ECO 10-Dimensions", href: "/admin/sections/page-eco-dimensions", icon: TreePine },
+      { label: "ECO N.A.T.U.R.E.", href: "/admin/sections/page-eco-nature", icon: Leaf },
       { label: "Sectors", href: "/admin/sections/page-sectors", icon: Building2 },
       { label: "Projects", href: "/admin/sections/page-projects", icon: FolderOpen },
       { label: "Why VBR", href: "/admin/sections/page-why-vbr", icon: Shield },

@@ -3,13 +3,19 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Menu, X, Search } from "lucide-react"
+import { Menu, X, Search, ChevronDown } from "lucide-react"
 
 interface NavLink {
   label: string
   href: string
   order?: number
 }
+
+const ecoMatrixSubLinks = [
+  { label: "Overview", href: "/eco-matrix" },
+  { label: "10-Dimension Architecture", href: "/eco-matrix/10-dimensions" },
+  { label: "N.A.T.U.R.E. Frameworks", href: "/eco-matrix/nature-framework" },
+]
 
 interface NavbarProps {
   data?: Record<string, unknown>
@@ -18,6 +24,7 @@ interface NavbarProps {
 
 export default function Navbar({ data, branding }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [ecoMobileExpanded, setEcoMobileExpanded] = useState(false)
 
   if (!data) return null
 
@@ -25,6 +32,9 @@ export default function Navbar({ data, branding }: NavbarProps) {
   const ctaText = (data.ctaText as string) || ""
   const navbarLogo = (branding?.navbarLogo as string) || ""
   const siteName = (branding?.siteName as string) || "VBR Landscaping"
+
+  const isEcoLink = (href: string) =>
+    href === "/eco-matrix" || href.startsWith("/eco-matrix")
 
   return (
     <header className="absolute top-0 left-0 right-0 z-50">
@@ -50,15 +60,44 @@ export default function Navbar({ data, branding }: NavbarProps) {
 
         {/* Desktop Nav */}
         <nav className="hidden items-center gap-6 xl:flex">
-          {links.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="text-sm font-medium text-primary-foreground/90 transition-colors hover:text-primary-foreground"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {links.map((link) => {
+            if (isEcoLink(link.href)) {
+              return (
+                <div key={link.label} className="group relative">
+                  <Link
+                    href="/eco-matrix"
+                    className="flex items-center gap-1 text-sm font-medium text-primary-foreground/90 transition-colors hover:text-primary-foreground"
+                  >
+                    {link.label}
+                    <ChevronDown className="h-3.5 w-3.5 transition-transform group-hover:rotate-180" />
+                  </Link>
+                  {/* Dropdown */}
+                  <div className="pointer-events-none absolute top-full left-1/2 z-50 -translate-x-1/2 pt-2 opacity-0 transition-all duration-200 group-hover:pointer-events-auto group-hover:opacity-100">
+                    <div className="w-64 rounded-xl border border-[#2d6a2e]/10 bg-white p-2 shadow-xl">
+                      {ecoMatrixSubLinks.map((sub) => (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          className="block rounded-lg px-4 py-2.5 text-sm font-medium text-[#1a1a1a] transition-colors hover:bg-[#2d6a2e]/8 hover:text-[#2d6a2e]"
+                        >
+                          {sub.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )
+            }
+            return (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="text-sm font-medium text-primary-foreground/90 transition-colors hover:text-primary-foreground"
+              >
+                {link.label}
+              </Link>
+            )
+          })}
         </nav>
 
         {/* Right side */}
@@ -91,16 +130,45 @@ export default function Navbar({ data, branding }: NavbarProps) {
       {mobileOpen && (
         <div className="border-t border-primary-foreground/10 bg-primary/95 px-6 py-4 backdrop-blur-sm xl:hidden">
           <nav className="flex flex-col gap-3">
-            {links.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-sm font-medium text-primary-foreground/90 transition-colors hover:text-primary-foreground"
-                onClick={() => setMobileOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {links.map((link) => {
+              if (isEcoLink(link.href)) {
+                return (
+                  <div key={link.label}>
+                    <button
+                      onClick={() => setEcoMobileExpanded(!ecoMobileExpanded)}
+                      className="flex w-full items-center justify-between text-sm font-medium text-primary-foreground/90 transition-colors hover:text-primary-foreground"
+                    >
+                      {link.label}
+                      <ChevronDown className={`h-4 w-4 transition-transform ${ecoMobileExpanded ? "rotate-180" : ""}`} />
+                    </button>
+                    {ecoMobileExpanded && (
+                      <div className="mt-2 flex flex-col gap-2 border-l-2 border-secondary/40 pl-4">
+                        {ecoMatrixSubLinks.map((sub) => (
+                          <Link
+                            key={sub.href}
+                            href={sub.href}
+                            className="text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground"
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            {sub.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+              return (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="text-sm font-medium text-primary-foreground/90 transition-colors hover:text-primary-foreground"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              )
+            })}
             {ctaText && (
               <Link
                 href="/contact"
