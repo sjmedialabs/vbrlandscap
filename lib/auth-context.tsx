@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { firebaseConfig } from "@/lib/firebase"
 
 interface AuthUser {
   email: string
@@ -16,53 +17,78 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
+const SESSION_KEY = "admin-auth-session"
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check existing session on mount
-    fetch("/api/auth/verify")
-      .then(async (res) => {
-        const text = await res.text()
-        try {
-          const data = JSON.parse(text)
-          if (data.authenticated) {
-            setUser({ email: data.email, uid: data.uid })
-          }
-        } catch {
-          // Response was not JSON (e.g. HTML error page) - treat as not authenticated
+    // Check sessionStorage for existing session
+    try {
+      const stored = sessionStorage.getItem(SESSION_KEY)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed.email && parsed.uid) {
+          setUser(parsed)
         }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+      }
+    } catch {
+      // ignore
+    }
+    setLoading(false)
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    })
-
-    const text = await res.text()
-    let data
-    try {
-      data = JSON.parse(text)
-    } catch {
-      throw new Error("Server error: unexpected response. Check Firebase Admin env vars.")
+    // Authenticate directly via Firebase Auth REST API (client-side, public API key)
+    const apiKey = firebaseConfig.apiKey
+    console.log("[v0] Firebase API key available:", !!apiKey)
+    if (!apiKey) {
+      throw new Error("Firebase API key is not configured. Check NEXT_PUBLIC_FIREBASE_API_KEY in Vars.")
     }
+
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, returnSecureToken: true }),
+      }
+    )
+
+    const data = await res.json()
 
     if (!res.ok) {
-      throw new Error(data.error || "Login failed")
+      const fbError = data?.error?.message || "Authentication failed"
+      const msg =
+        fbError === "EMAIL_NOT_FOUND" ||
+        fbError === "INVALID_PASSWORD" ||
+        fbError === "INVALID_LOGIN_CREDENTIALS"
+          ? "Invalid email or password"
+          : fbError
+      throw new Error(msg)
     }
 
-    setUser(data.user)
+    const u: AuthUser = { email: data.email, uid: data.localId }
+    setUser(u)
+    // Persist session to sessionStorage
+    try {
+      sessionStorage.setItem(
+        SESSION_KEY,
+        JSON.stringify({ ...u, idToken: data.idToken, refreshToken: data.refreshToken })
+      )
+    } catch {
+      // ignore
+    }
   }
 
   const signOut = async () => {
-    await fetch("/api/auth/session", { method: "DELETE" })
     setUser(null)
+    try {
+      sessionStorage.removeItem(SESSION_KEY)
+    } catch {
+      // ignore
+    }
   }
 
   return (
