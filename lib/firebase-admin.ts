@@ -1,11 +1,6 @@
 import admin from "firebase-admin"
 
-let _initialized = false
-
 function initAdmin() {
-  if (_initialized) return
-  _initialized = true
-
   if (admin.apps.length) return
 
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID
@@ -13,11 +8,7 @@ function initAdmin() {
   const rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY || process.env.FIREBASE_PRIVATE_KEY
 
   if (!projectId || !clientEmail || !rawKey) {
-    console.warn("[firebase-admin] Missing env vars:", {
-      projectId: !!projectId,
-      clientEmail: !!clientEmail,
-      privateKey: !!rawKey,
-    })
+    console.warn("[firebase-admin] Missing env vars - cannot initialize admin SDK")
     return
   }
 
