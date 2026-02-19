@@ -5,6 +5,7 @@ export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get("Authorization") || ""
     const authToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : ""
+    console.log("[v0] Seed: projectId=", process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? "SET" : "EMPTY", "apiKey=", process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? "SET" : "EMPTY", "authToken=", authToken ? "SET" : "EMPTY")
     const sections: Record<string, Record<string, unknown>> = {
       hero: {
         heading: "Transforming Outdoor Spaces Into Natural Beauty.",
