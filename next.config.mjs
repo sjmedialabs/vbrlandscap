@@ -3,14 +3,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '*.public.blob.vercel-storage.com',
-      },
-    ],
-  },
-}
+};
 
-export default nextConfig
+export default nextConfig;
