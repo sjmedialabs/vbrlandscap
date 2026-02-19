@@ -2,9 +2,6 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 
-// NEXT_PUBLIC_* vars are inlined at build time in "use client" files
-const FIREBASE_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || ""
-
 interface AuthUser {
   email: string
   uid: string
@@ -41,9 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    if (!FIREBASE_API_KEY) {
+    // Read at call time, not module init time
+    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || ""
+    if (!apiKey) {
       throw new Error("Firebase API key is not configured. Check NEXT_PUBLIC_FIREBASE_API_KEY in Vars.")
     }
+    const FIREBASE_API_KEY = apiKey
 
     const res = await fetch(
       `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,
