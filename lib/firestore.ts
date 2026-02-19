@@ -85,16 +85,9 @@ function docToObject(doc: FirestoreDocument): Record<string, unknown> {
   return obj
 }
 
-// ---------- Admin SDK fallback ----------
-
-async function getAdminFirestore(): Promise<FirebaseFirestore.Firestore | null> {
-  try {
-    const { getAdminDb } = await import("./firebase-admin")
-    return getAdminDb()
-  } catch {
-    return null
-  }
-}
+// ---------- No admin SDK fallback ----------
+// All Firestore operations use the REST API exclusively.
+// The admin SDK had persistent PEM key parsing issues in this env.
 
 // ---------- public API ----------
 
@@ -120,18 +113,6 @@ export async function getAllSections(): Promise<Record<string, Record<string, un
     }
   }
 
-  // Fallback: Admin SDK
-  const adminDb = await getAdminFirestore()
-  if (adminDb) {
-    const snapshot = await adminDb.collection("sections").get()
-    if (snapshot.empty) return null
-    const sections: Record<string, Record<string, unknown>> = {}
-    snapshot.forEach((d) => {
-      sections[d.id] = { id: d.id, ...d.data() }
-    })
-    return sections
-  }
-
   return null
 }
 
@@ -148,13 +129,6 @@ export async function getSection(id: string): Promise<Record<string, unknown> | 
     } catch (e) {
       console.error("[firestore-rest] getSection failed:", e)
     }
-  }
-
-  const adminDb = await getAdminFirestore()
-  if (adminDb) {
-    const d = await adminDb.collection("sections").doc(id).get()
-    if (!d.exists) return null
-    return { id: d.id, ...d.data() } as Record<string, unknown>
   }
 
   return null
@@ -191,17 +165,7 @@ export async function setSection(id: string, data: Record<string, unknown>, merg
     }
   }
 
-  const adminDb = await getAdminFirestore()
-  if (adminDb) {
-    if (merge) {
-      await adminDb.collection("sections").doc(id).set(data, { merge: true })
-    } else {
-      await adminDb.collection("sections").doc(id).set(data)
-    }
-    return
-  }
-
-  throw new Error("No Firestore connection available")
+  throw new Error("No Firestore connection available - check NEXT_PUBLIC_FIREBASE_PROJECT_ID")
 }
 
 export async function setSectionFull(id: string, data: Record<string, unknown>) {
@@ -228,11 +192,5 @@ export async function setSectionFull(id: string, data: Record<string, unknown>) 
     }
   }
 
-  const adminDb = await getAdminFirestore()
-  if (adminDb) {
-    await adminDb.collection("sections").doc(id).set(data)
-    return
-  }
-
-  throw new Error("No Firestore connection available")
+  throw new Error("No Firestore connection available - check NEXT_PUBLIC_FIREBASE_PROJECT_ID")
 }
