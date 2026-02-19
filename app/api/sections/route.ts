@@ -1,21 +1,28 @@
-import { NextResponse } from "next/server"
-import { db } from "@/lib/firebase"
-import { collection, getDocs } from "firebase/firestore"
+import { NextResponse } from "next/server";
+import { adminDb } from "@/lib/firebase-admin";
 
-export const dynamic = "force-dynamic"
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const snapshot = await getDocs(collection(db, "sections"))
-    const sections: Record<string, unknown> = {}
+    const snapshot = await adminDb.collection("sections").get();
 
-    snapshot.forEach((docSnap) => {
-      sections[docSnap.id] = { id: docSnap.id, ...docSnap.data() }
-    })
+    const sections: Record<string, unknown> = {};
 
-    return NextResponse.json(sections)
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown error"
-    return NextResponse.json({ error: message }, { status: 500 })
+    snapshot.forEach((doc) => {
+      sections[doc.id] = {
+        id: doc.id,
+        ...doc.data(),
+      };
+    });
+
+    return NextResponse.json(sections);
+  } catch (error: any) {
+    console.error("GET /sections error:", error);
+
+    return NextResponse.json(
+      { error: error?.message || "Unknown error" },
+      { status: 500 },
+    );
   }
 }
