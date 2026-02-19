@@ -7,7 +7,7 @@ import { Save, Loader2, AlertCircle, Plus, Trash2, Upload, X, ImageIcon } from "
 interface FieldConfig {
   key: string
   label: string
-  type: "text" | "textarea" | "image" | "array" | "object-array"
+  type: "text" | "textarea" | "image" | "color" | "array" | "object-array"
   fields?: FieldConfig[]
 }
 
@@ -186,6 +186,29 @@ function FieldInput({
           rows={3}
           className="w-full rounded-lg border border-[#ddd] bg-[#fafafa] px-3 py-2.5 text-sm text-[#1a1a1a] outline-none focus:border-[#2d6a2e] focus:ring-2 focus:ring-[#2d6a2e]/20"
         />
+      </div>
+    )
+  }
+
+  if (field.type === "color") {
+    return (
+      <div>
+        <label className="mb-1 block text-sm font-medium text-[#333]">{field.label}</label>
+        <div className="flex items-center gap-3">
+          <input
+            type="color"
+            value={(value as string) || "#000000"}
+            onChange={(e) => onChange(e.target.value)}
+            className="h-10 w-14 cursor-pointer rounded-lg border border-[#ddd] bg-[#fafafa] p-1"
+          />
+          <input
+            type="text"
+            value={(value as string) || ""}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="#2d6a2e"
+            className="flex-1 rounded-lg border border-[#ddd] bg-[#fafafa] px-3 py-2.5 text-sm text-[#1a1a1a] outline-none focus:border-[#2d6a2e] focus:ring-2 focus:ring-[#2d6a2e]/20"
+          />
+        </div>
       </div>
     )
   }
