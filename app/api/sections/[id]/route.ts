@@ -1,56 +1,36 @@
 import { NextResponse } from "next/server"
-import { adminDb } from "@/lib/firebase-admin"
-import { adminAuth } from "@/lib/firebase-admin"
-import { cookies } from "next/headers"
-
-async function verifyAuth() {
-  const cookieStore = await cookies()
-  const token = cookieStore.get("auth-token")?.value
-  if (!token) return null
-  try {
-    const decoded = await adminAuth.verifySessionCookie(token, true)
-    return decoded
-  } catch {
-    return null
-  }
-}
+import { getSection, setSection } from "@/lib/firestore"
 
 export async function GET(
-  request: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
-    const doc = await adminDb.collection("sections").doc(id).get()
-    if (!doc.exists) {
+    const data = await getSection(id)
+    if (!data) {
       return NextResponse.json({ error: "Section not found" }, { status: 404 })
     }
-    return NextResponse.json({ id: doc.id, ...doc.data() })
+    return NextResponse.json(data)
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error"
+    console.error("GET /sections/[id] error:", message)
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
 export async function PUT(
-  request: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const user = await verifyAuth()
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
   try {
     const { id } = await params
-    const body = await request.json()
-    const { id: _id, ...data } = body
-
-    await adminDb.collection("sections").doc(id).set(data, { merge: true })
-    const updated = await adminDb.collection("sections").doc(id).get()
-    return NextResponse.json({ id: updated.id, ...updated.data() })
+    const body = await req.json()
+    await setSection(id, body, true)
+    return NextResponse.json({ success: true, message: "Section updated" })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error"
+    console.error("PUT /sections/[id] error:", message)
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

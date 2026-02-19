@@ -16,42 +16,76 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
+const SESSION_KEY = "admin-auth-session"
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check existing session on mount
-    fetch("/api/auth/verify")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.authenticated) {
-          setUser({ email: data.email, uid: data.uid })
+    try {
+      const stored = sessionStorage.getItem(SESSION_KEY)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed.email && parsed.uid) {
+          setUser(parsed)
         }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+      }
+    } catch {
+      // ignore
+    }
+    setLoading(false)
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    })
+    // Read at call time, not module init time
+    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || ""
+    if (!apiKey) {
+      throw new Error("Firebase API key is not configured. Check NEXT_PUBLIC_FIREBASE_API_KEY in Vars.")
+    }
+    const FIREBASE_API_KEY = apiKey
+
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, returnSecureToken: true }),
+      }
+    )
 
     const data = await res.json()
 
     if (!res.ok) {
-      throw new Error(data.error || "Login failed")
+      const fbError = data?.error?.message || "Authentication failed"
+      const msg =
+        fbError === "EMAIL_NOT_FOUND" ||
+        fbError === "INVALID_PASSWORD" ||
+        fbError === "INVALID_LOGIN_CREDENTIALS"
+          ? "Invalid email or password"
+          : fbError
+      throw new Error(msg)
     }
 
-    setUser(data.user)
+    const u: AuthUser = { email: data.email, uid: data.localId }
+    setUser(u)
+    try {
+      sessionStorage.setItem(
+        SESSION_KEY,
+        JSON.stringify({ ...u, idToken: data.idToken, refreshToken: data.refreshToken })
+      )
+    } catch {
+      // ignore
+    }
   }
 
   const signOut = async () => {
-    await fetch("/api/auth/session", { method: "DELETE" })
     setUser(null)
+    try {
+      sessionStorage.removeItem(SESSION_KEY)
+    } catch {
+      // ignore
+    }
   }
 
   return (

@@ -1,4 +1,3 @@
-import { adminDb } from "@/lib/firebase-admin"
 import Navbar from "@/components/navbar"
 import HeroSection from "@/components/sections/hero"
 import AboutSection from "@/components/sections/about"
@@ -13,33 +12,28 @@ import FAQSection from "@/components/sections/faq"
 import BlogSection from "@/components/sections/blog"
 import NewsletterSection from "@/components/sections/newsletter"
 import Footer from "@/components/footer"
+import { getAllSections } from "@/lib/firestore"
 
 export const dynamic = "force-dynamic"
 
-async function getAllSections() {
-  try {
-    const snapshot = await adminDb.collection("sections").get()
-    const sections: Record<string, Record<string, unknown>> = {}
-    snapshot.forEach((doc) => {
-      sections[doc.id] = { id: doc.id, ...doc.data() }
-    })
-    return sections
-  } catch (error) {
-    console.error("Failed to fetch sections from Firestore:", error)
-    return null
-  }
-}
-
 export default async function HomePage() {
-  const sections = await getAllSections()
+  let sections: Record<string, Record<string, unknown>> | null = null
+  try {
+    sections = await getAllSections()
+  } catch (error) {
+    console.error("[v0] Failed to fetch sections:", error)
+  }
 
   if (!sections) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#f5f7f0]">
         <h1 className="text-2xl font-bold text-[#1a1a1a]">Database Not Connected</h1>
         <p className="text-sm text-[#666]">
-          Please visit <a href="/admin" className="font-semibold text-[#2d6a2e] underline">/admin</a> to seed the database first.
+          Firestore has no data yet or the connection failed. Please visit{" "}
+          <a href="/admin" className="font-semibold text-[#2d6a2e] underline">/admin</a>{" "}
+          to seed the database first.
         </p>
+        <p className="mt-2 text-xs text-[#999]">Check the server console for detailed error info.</p>
       </div>
     )
   }
