@@ -1,7 +1,7 @@
 /**
- * Unified Firestore access layer using REST API.
- * This avoids all SDK initialization issues by directly calling the Firestore REST API.
- * Falls back to Firebase Admin SDK or Client SDK if REST fails.
+ * Unified Firestore access layer using REST API only.
+ * No Firebase Admin SDK or Client SDK is used anywhere in this module.
+ * All data access goes through fetch() to firestore.googleapis.com.
  */
 
 function getProjectId() {
