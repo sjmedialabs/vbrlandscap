@@ -50,6 +50,16 @@ function initAdmin() {
 
   try {
     const privateKey = parsePrivateKey(rawKey)
+    console.log("[v0] PEM key debug:", JSON.stringify({
+      rawLen: rawKey.length,
+      rawFirst50: rawKey.substring(0, 50),
+      rawHasRealNewlines: rawKey.includes("\n"),
+      rawHasEscapedNewlines: rawKey.includes("\\n"),
+      parsedLen: privateKey.length,
+      parsedFirst50: privateKey.substring(0, 50),
+      parsedHasRealNewlines: privateKey.includes("\n"),
+      parsedLineCount: privateKey.split("\n").length,
+    }))
     admin.initializeApp({
       credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
     })
