@@ -1,7 +1,6 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import { firebaseConfig } from "@/lib/firebase"
 
 interface AuthUser {
   email: string
@@ -40,9 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    // Authenticate directly via Firebase Auth REST API (client-side, public API key)
-    const apiKey = firebaseConfig.apiKey
-    console.log("[v0] Firebase API key available:", !!apiKey)
+    // Authenticate via Firebase Auth REST API
+    // NEXT_PUBLIC_ vars are inlined at build time for client components
+    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? ""
     if (!apiKey) {
       throw new Error("Firebase API key is not configured. Check NEXT_PUBLIC_FIREBASE_API_KEY in Vars.")
     }

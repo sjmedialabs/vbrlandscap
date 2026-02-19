@@ -12,20 +12,36 @@ function initAdmin() {
     return
   }
 
+  // Parse private key - handle all common formats from Vercel env vars
   let privateKey = rawKey
-  if (rawKey.startsWith('"') && rawKey.endsWith('"')) {
-    privateKey = JSON.parse(rawKey) as string
-  } else if (!rawKey.includes("-----BEGIN")) {
+
+  // 1. Strip wrapping quotes if present
+  if ((privateKey.startsWith('"') && privateKey.endsWith('"')) ||
+      (privateKey.startsWith("'") && privateKey.endsWith("'"))) {
+    privateKey = privateKey.slice(1, -1)
+  }
+
+  // 2. Replace literal \n sequences with real newlines
+  privateKey = privateKey.replace(/\\n/g, "\n")
+
+  // 3. If still no PEM header, try base64 decode
+  if (!privateKey.includes("-----BEGIN")) {
     try {
-      const decoded = Buffer.from(rawKey, "base64").toString("utf-8")
+      const decoded = Buffer.from(privateKey, "base64").toString("utf-8")
       if (decoded.includes("-----BEGIN")) {
         privateKey = decoded
       }
     } catch {
-      // Not base64, use as-is
+      // Not base64
     }
   }
-  privateKey = privateKey.replace(/\\n/g, "\n")
+
+  // 4. Ensure proper PEM newlines (some envs collapse all whitespace)
+  if (privateKey.includes("-----BEGIN") && !privateKey.includes("\n-----")) {
+    privateKey = privateKey
+      .replace(/-----BEGIN PRIVATE KEY-----\s*/, "-----BEGIN PRIVATE KEY-----\n")
+      .replace(/\s*-----END PRIVATE KEY-----/, "\n-----END PRIVATE KEY-----\n")
+  }
 
   try {
     admin.initializeApp({
