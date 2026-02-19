@@ -1,4 +1,4 @@
-import admin from "firebase-admin"
+import admin from "firebase-admin";
 
 function parsePrivateKey(raw: string): string {
   // Nuclear option: extract ONLY the base64 content from the PEM key,
@@ -10,69 +10,93 @@ function parsePrivateKey(raw: string): string {
 
   // Try JSON.parse first in case the whole thing is a JSON string
   try {
-    const parsed = JSON.parse(input)
-    if (typeof parsed === "string") input = parsed
+    const parsed = JSON.parse(raw);
+    if (typeof parsed === "string")
+      return parsed.endsWith("\n") ? parsed : parsed + "\n";
   } catch {
     // not JSON, continue
   }
 
-  // Replace all common newline representations
-  input = input.replace(/\\n/g, "\n")
-
-  // Extract base64 content between PEM headers
-  const pemMatch = input.match(/-----BEGIN[^-]*-----([^-]+)-----END[^-]*-----/)
-  if (pemMatch) {
-    // Strip everything that's not a valid base64 character
-    const base64Content = pemMatch[1].replace(/[^A-Za-z0-9+/=]/g, "")
-
-    // Reconstruct clean PEM with proper 64-char line wrapping
-    const lines: string[] = []
-    for (let i = 0; i < base64Content.length; i += 64) {
-      lines.push(base64Content.substring(i, i + 64))
+  // Method 2: Replace literal \n sequences
+  if (raw.includes("\\n")) {
+    const replaced = raw.replace(/\\n/g, "\n");
+    if (replaced.includes("-----BEGIN")) {
+      return replaced.endsWith("\n") ? replaced : replaced + "\n";
     }
 
-    return `-----BEGIN PRIVATE KEY-----\n${lines.join("\n")}\n-----END PRIVATE KEY-----\n`
+  // Method 3: Strip wrapping quotes
+  let key = raw;
+  if (
+    (key.startsWith('"') && key.endsWith('"')) ||
+    (key.startsWith("'") && key.endsWith("'"))
+  ) {
+    key = key.slice(1, -1).replace(/\\n/g, "\n");
   }
 
-  // If no PEM header found, try base64 decode
-  try {
-    const decoded = Buffer.from(input, "base64").toString("utf-8")
-    if (decoded.includes("-----BEGIN")) return parsePrivateKey(decoded)
-  } catch {
-    // not base64
+  // Method 4: base64 decode
+  if (!key.includes("-----BEGIN")) {
+    try {
+      const decoded = Buffer.from(key, "base64").toString("utf-8");
+      if (decoded.includes("-----BEGIN")) key = decoded;
+    } catch {
+      // Not base64
+    }
   }
 
-  return input
+  return key.endsWith("\n") ? key : key + "\n";
 }
 
 function initAdmin() {
-  if (admin.apps.length) return
+  if (admin.apps.length) return;
 
-  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID
-  const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL || process.env.FIREBASE_CLIENT_EMAIL
-  const rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY || process.env.FIREBASE_PRIVATE_KEY
+  const projectId =
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+    process.env.FIREBASE_PROJECT_ID;
+  const clientEmail =
+    process.env.FIREBASE_ADMIN_CLIENT_EMAIL ||
+    process.env.FIREBASE_CLIENT_EMAIL;
+  const rawKey =
+    process.env.FIREBASE_ADMIN_PRIVATE_KEY || process.env.FIREBASE_PRIVATE_KEY;
 
   if (!projectId || !clientEmail || !rawKey) {
-    console.warn("[firebase-admin] Missing env vars - cannot initialize admin SDK")
-    return
+    console.warn(
+      "[firebase-admin] Missing env vars - cannot initialize admin SDK",
+    );
+    return;
   }
 
   try {
-    const privateKey = parsePrivateKey(rawKey)
+    const privateKey = parsePrivateKey(rawKey);
+    console.log(
+      "[v0] PEM key debug:",
+      JSON.stringify({
+        rawLen: rawKey.length,
+        rawFirst50: rawKey.substring(0, 50),
+        rawHasRealNewlines: rawKey.includes("\n"),
+        rawHasEscapedNewlines: rawKey.includes("\\n"),
+        parsedLen: privateKey.length,
+        parsedFirst50: privateKey.substring(0, 50),
+        parsedHasRealNewlines: privateKey.includes("\n"),
+        parsedLineCount: privateKey.split("\n").length,
+      }),
+    );
     admin.initializeApp({
       credential: admin.credential.cert({ projectId, clientEmail, privateKey }),
-    })
+    });
   } catch (err) {
-    console.error("[firebase-admin] Init failed:", err instanceof Error ? err.message : err)
+    console.error(
+      "[firebase-admin] Init failed:",
+      err instanceof Error ? err.message : err,
+    );
   }
 }
 
 export function getAdminDb(): FirebaseFirestore.Firestore | null {
-  initAdmin()
-  return admin.apps.length ? admin.firestore() : null
+  initAdmin();
+  return admin.apps.length ? admin.firestore() : null;
 }
 
 export function getAdminAuth() {
-  initAdmin()
-  return admin.apps.length ? admin.auth() : null
+  initAdmin();
+  return admin.apps.length ? admin.auth() : null;
 }
