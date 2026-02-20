@@ -1,24 +1,24 @@
-import Image from "next/image"
+import Image from "next/image";
 
 interface HeroProps {
-  data?: Record<string, unknown>
+  data?: Record<string, unknown>;
 }
 
 export default function HeroSection({ data }: HeroProps) {
-  if (!data) return null
+  if (!data) return null;
 
-  const heading = data.heading as string
-  const statValue = data.statValue as string
-  const statLabel = data.statLabel as string
-  const backgroundImage = data.backgroundImage as string
-  const statImage = data.statImage as string
-  const avatarsImage = data.avatarsImage as string
-  const rating = data.rating as string
-  const reviewCount = data.reviewCount as string
-  const tagline = data.tagline as string
+  const heading = data.heading as string;
+  const statValue = data.statValue as string;
+  const statLabel = data.statLabel as string;
+  const backgroundImage = data.backgroundImage as string;
+  const statImage = data.statImage as string;
+  const avatarsImage = data.avatarsImage as string;
+  const rating = data.rating as string;
+  const reviewCount = data.reviewCount as string;
+  const tagline = data.tagline as string;
 
   return (
-    <section className="relative min-h-[650px] overflow-hidden lg:min-h-[750px]">
+    <section className="relative min-h-[600px] overflow-hidden lg:min-h-[650px]">
       {/* Background Image */}
       <div className="absolute inset-0">
         <Image
@@ -33,7 +33,7 @@ export default function HeroSection({ data }: HeroProps) {
       </div>
 
       {/* Content */}
-      <div className="relative mx-auto flex max-w-7xl flex-col justify-end px-6 pt-40 pb-8 lg:pt-48 lg:pb-12">
+      <div className="relative mx-auto flex max-w-7xl flex-col justify-end px-6 pt-40 pb-8 lg:pt-60 lg:pb-4">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <h1 className="text-balance text-4xl font-bold leading-[1.1] text-white md:text-5xl lg:text-[64px]">
@@ -81,16 +81,27 @@ export default function HeroSection({ data }: HeroProps) {
             </div>
           </div>
           <div className="hidden h-8 w-px bg-white/20 lg:block" />
-          <span className="text-lg font-semibold tracking-wide text-white">{tagline}</span>
+          <span className="text-lg font-semibold tracking-wide text-white">
+            {tagline}
+          </span>
         </div>
       </div>
 
       {/* Bottom wave */}
       <div className="absolute bottom-0 left-0 right-0">
-        <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full" preserveAspectRatio="none">
-          <path d="M0 60V20C360 45 720 0 1080 20C1260 30 1380 25 1440 20V60H0Z" fill="hsl(var(--background))" />
+        <svg
+          viewBox="0 0 1440 60"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-full"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0 60V20C360 45 720 0 1080 20C1260 30 1380 25 1440 20V60H0Z"
+            fill="hsl(var(--background))"
+          />
         </svg>
       </div>
     </section>
-  )
+  );
 }

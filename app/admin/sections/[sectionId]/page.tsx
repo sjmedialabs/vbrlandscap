@@ -40,8 +40,104 @@ const sectionConfigs: Record<string, { title: string; fields: FieldDef[] }> = {
       },
     ],
   },
+  "about-page-hero": {
+    title: "About Page - Hero Section",
+    fields: [
+      { key: "heading", label: "Heading", type: "text" },
+      { key: "backgroundImage", label: "Background Image", type: "image" },
+      {
+        key: "breadcrumbs",
+        label: "Breadcrumbs",
+        type: "object-array",
+        fields: [
+          { key: "label", label: "Label", type: "text" },
+          { key: "href", label: "URL", type: "text" },
+        ],
+      },
+    ],
+  },
+  "about-page-intro": {
+    title: "About Page - Introduction Section",
+    fields: [
+      { key: "badge", label: "Badge Text", type: "text" },
+      { key: "heading", label: "Heading", type: "text" },
+      { key: "yearsValue", label: "Years Value (e.g. 25+)", type: "text" },
+      { key: "yearsLabel", label: "Years Label", type: "text" },
+      { key: "description", label: "Description", type: "textarea" },
+      { key: "buttonText", label: "Button Text", type: "text" },
+      { key: "buttonLink", label: "Button Link", type: "text" },
+      { key: "mainImage", label: "Main Image", type: "image" },
+    ],
+  },
+  "about-page-features": {
+    title: "About Page - Features Section",
+    fields: [
+      {
+        key: "items",
+        label: "Feature Items",
+        type: "object-array",
+        fields: [
+          { key: "icon", label: "Icon", type: "image" },
+          { key: "title", label: "Title", type: "text" },
+          { key: "description", label: "Description", type: "textarea" },
+        ],
+      },
+    ],
+  },
+  "about-page-accountability": {
+    title: "About Page - VBR Group Strength Section",
+    fields: [
+      { key: "badge", label: "Badge Text", type: "text" },
+      { key: "heading", label: "Heading", type: "text" },
+      { key: "decorImage", label: "Decoration Image", type: "image" },
+      {
+        key: "companies",
+        label: "Companies",
+        type: "object-array",
+        fields: [
+          { key: "number", label: "Number (01, 02, 03)", type: "text" },
+          { key: "logo", label: "Logo Icon", type: "image" },
+          { key: "name", label: "Company Name", type: "text" },
+          { key: "subtitle", label: "Subtitle", type: "text" },
+          { key: "image", label: "Company Image", type: "image" },
+          { key: "strengthTitle", label: "Strength Highlights Title", type: "text" },
+          { key: "strengthHighlights", label: "Strength Highlights", type: "array" },
+          { key: "benefitTitle", label: "Client Benefits Title", type: "text" },
+          { key: "clientBenefits", label: "Client Benefits", type: "array" },
+        ],
+      },
+    ],
+  },
+  "about-page-why-choose": {
+    title: "About Page - Why Choose Us Section",
+    fields: [
+      { key: "badge", label: "Badge Text", type: "text" },
+      { key: "heading", label: "Heading", type: "text" },
+      { key: "description", label: "Description", type: "textarea" },
+      { key: "personImage", label: "Person Image", type: "image" },
+      {
+        key: "features",
+        label: "Features",
+        type: "object-array",
+        fields: [
+          { key: "icon", label: "Icon", type: "image" },
+          { key: "title", label: "Title", type: "text" },
+          { key: "description", label: "Description", type: "textarea" },
+        ],
+      },
+    ],
+  },
+  "about-page-newsletter": {
+    title: "About Page - Newsletter Section",
+    fields: [
+      { key: "heading", label: "Heading", type: "text" },
+      { key: "description", label: "Description", type: "textarea" },
+      { key: "buttonText", label: "Button Text", type: "text" },
+      { key: "placeholder", label: "Input Placeholder", type: "text" },
+    ],
+  },
   "page-about": {
-    title: "About Page",
+    title: "About Page (Legacy)",
     fields: [
       { key: "heroTitle", label: "Hero Title", type: "text" },
       { key: "heroSubtitle", label: "Hero Subtitle", type: "textarea" },
@@ -159,15 +255,31 @@ const sectionConfigs: Record<string, { title: string; fields: FieldDef[] }> = {
   "page-contact": {
     title: "Contact Page",
     fields: [
+      // Hero Section
       { key: "heroTitle", label: "Hero Title", type: "text" },
-      { key: "heroSubtitle", label: "Hero Subtitle", type: "textarea" },
+      { key: "heroBreadcrumb", label: "Breadcrumb Text", type: "text" },
       { key: "heroImage", label: "Hero Background Image", type: "image" },
-      { key: "address", label: "Address", type: "textarea" },
-      { key: "phone", label: "Phone", type: "text" },
-      { key: "email", label: "Email", type: "text" },
+      // Contact Info - Address
+      { key: "addressTitle", label: "Address Card Title", type: "text" },
+      { key: "addressLines", label: "Address Lines", type: "array" },
+      // Contact Info - Phone
+      { key: "phoneTitle", label: "Phone Card Title", type: "text" },
+      { key: "phones", label: "Phone Numbers", type: "array" },
+      // Contact Info - Email
+      { key: "emailTitle", label: "Email Card Title", type: "text" },
+      { key: "emails", label: "Email Addresses", type: "array" },
+      // Map Settings
       { key: "mapEmbedUrl", label: "Google Maps Embed URL", type: "text" },
+      // Form Settings
+      { key: "formBadge", label: "Form Badge Text", type: "text" },
       { key: "formHeading", label: "Form Heading", type: "text" },
-      { key: "formDescription", label: "Form Description", type: "textarea" },
+      { key: "formSuccessMessage", label: "Form Success Message", type: "textarea" },
+      { key: "recipientEmail", label: "Recipient Email (for submissions)", type: "text" },
+      { key: "autoReplyTemplate", label: "Auto-Reply Message Template", type: "textarea" },
+      // Newsletter
+      { key: "newsletterHeading", label: "Newsletter Heading", type: "text" },
+      { key: "newsletterDescription", label: "Newsletter Description", type: "textarea" },
+      { key: "newsletterPlaceholder", label: "Newsletter Placeholder", type: "text" },
     ],
   },
   hero: {
@@ -418,22 +530,12 @@ const sectionConfigs: Record<string, { title: string; fields: FieldDef[] }> = {
   footer: {
     title: "Footer",
     fields: [
+      // Branding
       { key: "brandName", label: "Brand Name", type: "text" },
       { key: "brandDescription", label: "Brand Description", type: "textarea" },
-      { key: "address", label: "Address", type: "text" },
-      { key: "phone", label: "Phone", type: "text" },
-      { key: "email", label: "Email", type: "text" },
-      { key: "copyright", label: "Copyright Text", type: "text" },
-      {
-        key: "socialLinks",
-        label: "Social Links",
-        type: "object-array",
-        fields: [
-          { key: "label", label: "Label", type: "text" },
-          { key: "image", label: "Icon Image", type: "image" },
-          { key: "href", label: "URL", type: "text" },
-        ],
-      },
+      { key: "ctaButtonText", label: "CTA Button Text", type: "text" },
+      { key: "ctaButtonLink", label: "CTA Button Link", type: "text" },
+      // Company Links
       {
         key: "companyLinks",
         label: "Company Links",
@@ -443,9 +545,40 @@ const sectionConfigs: Record<string, { title: string; fields: FieldDef[] }> = {
           { key: "href", label: "URL", type: "text" },
         ],
       },
+      // Sector Links
       {
-        key: "serviceLinks",
-        label: "Service Links",
+        key: "sectorLinks",
+        label: "Sector Links",
+        type: "object-array",
+        fields: [
+          { key: "label", label: "Label", type: "text" },
+          { key: "href", label: "URL", type: "text" },
+        ],
+      },
+      // Address & Contact
+      { key: "companyName", label: "Company Name", type: "text" },
+      { key: "addressText", label: "Full Address", type: "textarea" },
+      { key: "phone", label: "Phone Number", type: "text" },
+      { key: "email", label: "Email Address", type: "text" },
+      // Business Hours
+      { key: "hoursWeekday", label: "Weekday Hours (e.g. 9.00 am - 8.00pm)", type: "text" },
+      { key: "hoursWeekend", label: "Weekend Hours (e.g. 10.00 am - 8.00pm)", type: "text" },
+      // Social Media
+      {
+        key: "socialLinks",
+        label: "Social Media Links",
+        type: "object-array",
+        fields: [
+          { key: "label", label: "Platform Name", type: "text" },
+          { key: "image", label: "Icon Image", type: "image" },
+          { key: "href", label: "URL", type: "text" },
+        ],
+      },
+      // Legal / Copyright
+      { key: "copyright", label: "Copyright Text", type: "text" },
+      {
+        key: "policyLinks",
+        label: "Policy Links (bottom bar)",
         type: "object-array",
         fields: [
           { key: "label", label: "Label", type: "text" },

@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import type { Metadata } from "next"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
@@ -8,7 +8,12 @@ import Image from "next/image"
 
 export const dynamic = "force-dynamic"
 
-const validSlugs = ["about", "eco-matrix", "sectors", "projects", "why-vbr", "careers", "contact"]
+// Redirect eco-matrix to the new overview page
+const redirects: Record<string, string> = {
+  "eco-matrix": "/eco-matrix/overview",
+}
+
+const validSlugs = ["about", "sectors", "projects", "why-vbr", "contact"]
 
 // Dynamic SEO metadata
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -125,12 +130,17 @@ const pageConfig: Record<string, { docId: string; arrayKey?: string; arrayTitle?
   sectors: { docId: "page-sectors", arrayKey: "sectors", arrayTitle: "Sectors We Serve" },
   projects: { docId: "page-projects", arrayKey: "projects", arrayTitle: "Featured Projects" },
   "why-vbr": { docId: "page-why-vbr", arrayKey: "reasons", arrayTitle: "Why Choose VBR" },
-  careers: { docId: "page-careers", arrayKey: "openings", arrayTitle: "Current Openings" },
   contact: { docId: "page-contact" },
 }
 
 export default async function InnerPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
+  
+  // Handle redirects
+  if (redirects[slug]) {
+    redirect(redirects[slug])
+  }
+  
   const config = pageConfig[slug]
   if (!config) notFound()
 

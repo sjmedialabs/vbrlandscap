@@ -13,13 +13,21 @@ import BlogSection from "@/components/sections/blog"
 import NewsletterSection from "@/components/sections/newsletter"
 import Footer from "@/components/footer"
 import { getAllSections } from "@/lib/firestore"
+import { getEcoMatrixMenu } from "@/lib/eco-matrix-firestore"
 
 export const dynamic = "force-dynamic"
 
 export default async function HomePage() {
   let sections: Record<string, Record<string, unknown>> | null = null
+  let ecoMatrixMenu = null
+  
   try {
-    sections = await getAllSections()
+    const [sectionsData, menuData] = await Promise.all([
+      getAllSections(),
+      getEcoMatrixMenu(),
+    ])
+    sections = sectionsData
+    ecoMatrixMenu = menuData
   } catch (error) {
     console.error("[v0] Failed to fetch sections:", error)
   }
@@ -40,7 +48,7 @@ export default async function HomePage() {
 
   return (
     <main>
-      <Navbar data={sections.navbar} branding={sections.branding} />
+      <Navbar data={sections.navbar} branding={sections.branding} ecoMatrixMenu={ecoMatrixMenu} />
       <HeroSection data={sections.hero} />
       <AboutSection data={sections.about} />
       <ServicesSection data={sections.services} />
