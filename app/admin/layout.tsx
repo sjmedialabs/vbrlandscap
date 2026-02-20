@@ -1,7 +1,12 @@
-"use client"
+import AdminClientLayout from "./layout-client";
 
-import { AuthProvider } from "@/lib/auth-context"
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <AuthProvider>{children}</AuthProvider>
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <AdminClientLayout>{children}</AdminClientLayout>;
 }
